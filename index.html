@@ -2,99 +2,90 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, orientation=landscape">
-    <title>QUẢN LÝ CÔNG VIỆC BẰNG AI | Lam Quoc Hoan</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QUẢN LÝ CÔNG VIỆC BẰNG AI | LamQuocHoan</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
 
-    <div id="landing-page" class="screen active">
+    <div id="landing-page" class="page active">
         <div class="glass-card">
-            <h1 class="logo-text">QUẢN LÝ CÔNG VIỆC BẰNG <span class="ai-gradient">AI</span></h1>
-            <p class="slogan">Sở hữu không gian làm việc độc quyền của riêng bạn</p>
-            <button id="btn-create-space" class="btn-primary pulse">TẠO KHÔNG GIAN RIÊNG</button>
-            <div id="link-output-area" class="hidden">
-                <p>Đây là đường link vĩnh viễn của bạn:</p>
-                <div class="copy-box">
-                    <input type="text" id="exclusive-link" readonly>
-                    <button id="btn-copy">SAO CHÉP</button>
-                </div>
-                <p class="note">Lưu lại link này để truy cập bất cứ lúc nào!</p>
+            <h1>QUẢN LÝ CÔNG VIỆC BẰNG AI</h1>
+            <div class="input-group">
+                <input type="text" id="generated-link" readonly placeholder="Link độc quyền của bạn sẽ hiện ở đây...">
+                <button onclick="copyLink()" class="btn-copy">sao chép</button>
             </div>
-            <div class="founder-info">Được tạo bởi: LamQuocHoan</div>
+            <button onclick="generateUniqueSpace()" class="btn-main pulse">TẠO KHÔNG GIAN RIÊNG</button>
+            <p class="footer-text">Được tạo bởi: LamQuocHoan</p>
         </div>
     </div>
 
-    <div id="dashboard-page" class="screen">
-        <div id="name-overlay" class="modal-overlay hidden">
-            <div class="modal-content">
-                <h2 id="ai-greeting">Xin chào bạn! Mình là hệ thống quản lý công việc thông minh được tạo bởi Lam Quoc Hoan.</h2>
-                <p>Cậu tên gì thế?</p>
-                <input type="text" id="user-name-input" placeholder="Nhập tên của cậu...">
-                <button id="btn-start" class="btn-primary">BẮT ĐẦU</button>
-            </div>
-        </div>
+    <div id="dashboard-page" class="page">
+        <div class="help-icon" onclick="toggleModal('help-modal')">?</div>
 
-        <div id="help-overlay" class="modal-overlay hidden">
-            <div class="modal-content help-content">
-                <h3>HƯỚNG DẪN SỬ DỤNG</h3>
-                <p>🚀 Hãy nhập công việc + thời gian cụ thể rồi nhấn [THÊM CÔNG VIỆC] để tự động được thêm vào lịch nhé!</p>
-                <p>📜 Ở phần "LỊCH SỬ", bạn có thể xem lại công việc của 4 tuần gần nhất.</p>
-                <p>🌸 Ở phần "TƯƠNG LAI", bạn có thể xem công việc của 4 tuần sắp tới.</p>
-                <p>⚠️ Những công việc được trôi qua quá 4 tuần sẽ bị xóa mất đó nha.</p>
-                <p>Tôi là Lâm Quốc Hoàn, hi vọng sẽ giúp được bạn phần nào đó hehehehe</p>
-                <button id="btn-close-help">QUAY LẠI</button>
-            </div>
-        </div>
-
-        <header class="top-bar">
-            <div class="help-icon" id="btn-help"><i class="fas fa-question-circle"></i></div>
-            <div class="ai-input-container">
-                <input type="text" id="ai-task-input" placeholder="Hãy nhập công việc và thời gian cụ thể">
-                <button id="btn-add-task">THÊM CÔNG VIỆC</button>
+        <header class="ai-header">
+            <div class="ai-input-wrapper">
+                <input type="text" id="ai-task-input" placeholder="Hãy nhập công việc và thời gian cụ thể (VD: họp team 9h-11h sáng mai)">
+                <button onclick="processAITask()" class="btn-add-task">THÊM CÔNG VIỆC</button>
             </div>
         </header>
 
-        <main class="dashboard-content">
-            <section class="week-main">
+        <main class="calendar-container">
+            <section class="week-section current-week">
                 <h2 class="section-title">TUẦN NÀY</h2>
-                <div class="calendar-grid" id="this-week-grid">
+                <div class="calendar-grid" id="current-week-grid">
                     </div>
-                <div class="ai-chat-bubble-container">
+                <div class="ai-chat-box" id="ai-status-msg">
                     <div class="ai-avatar">🤖</div>
-                    <div class="chat-bubble" id="ai-speech">Chào cậu, hôm nay chúng ta bắt đầu làm việc nhé!</div>
+                    <div class="ai-bubble">Chào cậu, tui đang sẵn sàng giúp cậu đây!</div>
                 </div>
             </section>
 
-            <aside class="week-side">
+            <section class="week-section next-week">
                 <h2 class="section-title">TUẦN SAU</h2>
-                <div class="calendar-grid small" id="next-week-grid">
-                    </div>
-            </aside>
+                <div class="calendar-grid small" id="next-week-grid"></div>
+            </section>
         </main>
 
-        <footer class="bottom-nav">
-            <button id="btn-history"><i class="fas fa-book"></i> LỊCH SỬ</button>
-            <button id="btn-future"><i class="fas fa-seedling"></i> TƯƠNG LAI</button>
-            <div class="creator-tag">Được tạo bởi: LamQuocHoan</div>
-        </footer>
-
-        <div id="grid-modal" class="modal-overlay hidden">
-            <div class="modal-content wide">
-                <h2 id="modal-title">LỊCH SỬ</h2>
-                <div class="weeks-selector" id="weeks-container">
-                    </div>
-                <button id="btn-close-grid" class="btn-back">QUAY LẠI</button>
+        <footer class="dashboard-footer">
+            <div class="nav-btns">
+                <button class="btn-footer" onclick="showHistory('past')">📖 LỊCH SỬ</button>
+                <button class="btn-footer" onclick="showHistory('future')">🌸 TƯƠNG LAI</button>
             </div>
+            <p class="credit">Được tạo bởi: LamQuocHoan</p>
+        </footer>
+    </div>
+
+    <div id="welcome-modal" class="modal">
+        <div class="modal-content">
+            <h2 id="welcome-text">Xin chào bạn! Mình là hệ thống quản lý công việc thông minh được tạo bởi Lam Quoc Hoan. Cậu tên gì thế?</h2>
+            <input type="text" id="user-name-input" placeholder="Nhập tên của cậu...">
+            <button onclick="saveUserName()" class="btn-main">BẮT ĐẦU</button>
         </div>
     </div>
 
-    <div id="undo-toast" class="undo-toast hidden">
-        <span>Đã xóa công việc.</span>
-        <button id="btn-undo">HOÀN TÁC (10s)</button>
+    <div id="help-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="toggleModal('help-modal')">&times;</span>
+            <p>Hãy nhập công việc + thời gian cụ thể rồi nhấn <strong>[THÊM CÔNG VIỆC]</strong> để tự động được thêm vào lịch nhé!</p>
+            <p>Ở phần "LỊCH SỬ", bạn có thể xem lại công việc của 4 tuần gần nhất.</p>
+            <p>Ở phần "TƯƠNG LAI", bạn có thể xem công việc của 4 tuần sắp tới.</p>
+            <p>Những công việc được trôi qua quá 4 tuần sẽ bị xóa mất đó nha.</p>
+            <p>Tôi là Lâm Quốc Hoàn, hi vọng sẽ giúp được bạn phần nào đó hehehehe</p>
+        </div>
     </div>
 
+    <div id="history-modal" class="modal full-modal">
+        <div class="modal-content-large">
+            <button class="btn-back" id="btn-history-back" onclick="closeHistory()">← Trở lại</button>
+            <h2 id="history-title">LỊCH SỬ 4 TUẦN</h2>
+            <div class="history-grid" id="history-weeks-container"></div>
+        </div>
+    </div>
+
+    <audio id="sound-pop" src="https://www.soundjay.com/buttons/sounds/button-4.mp3"></audio>
+    <script src="script.js"></script>
 </body>
 </html>
