@@ -3,36 +3,46 @@
 <head>
   <meta charset="UTF-8" />
   <title>Quản Lý Công Việc AI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-<!-- ===== TRANG ĐẠI TRÀ ===== -->
-<div id="landing" class="center">
+<!-- ================= LANDING ================= -->
+<section id="landing">
   <h1>QUẢN LÝ CÔNG VIỆC AI</h1>
-  <p>Kiến tạo không gian làm việc độc bản & riêng tư tuyệt đối.</p>
+  <p class="subtitle">
+    Kiến tạo không gian làm việc độc bản & riêng tư tuyệt đối.
+  </p>
 
-  <button id="createLink">TẠO KHÔNG GIAN RIÊNG</button>
+  <button id="btnCreate">TẠO KHÔNG GIAN RIÊNG</button>
 
-  <div id="linkBox" class="hidden">
-    <p>Link độc quyền của bạn (hãy lưu lại):</p>
-    <input id="privateLink" readonly />
-    <button id="copyBtn">Sao chép</button>
-    <a id="openLink" target="_blank">Mở workspace</a>
+  <!-- BOX LINK (BAN ĐẦU ẨN) -->
+  <div id="linkContainer">
+    <label>Link độc quyền của bạn (hãy lưu lại):</label>
+
+    <div class="linkRow">
+      <input id="linkInput" readonly />
+      <button id="btnCopy">Sao chép</button>
+    </div>
+
+    <a id="btnOpen" target="_blank">Mở workspace</a>
   </div>
 
-  <small>Được tạo bởi: LamQuocHoan</small>
-</div>
+  <footer>Được tạo bởi: LamQuocHoan</footer>
+</section>
 
-<!-- ===== TRANG RIÊNG ===== -->
-<div id="workspace" class="hidden">
+<!-- ================= WORKSPACE ================= -->
+<section id="workspace">
   <h2>Workspace cá nhân</h2>
 
-  <input id="taskInput" placeholder="Nhập công việc..." />
-  <button id="addTask">Thêm</button>
+  <div class="taskInput">
+    <input id="taskText" placeholder="Nhập công việc..." />
+    <button id="addTask">Thêm</button>
+  </div>
 
   <ul id="taskList"></ul>
-</div>
+</section>
 
 <script src="app.js"></script>
 </body>
