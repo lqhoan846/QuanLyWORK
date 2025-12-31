@@ -1,71 +1,85 @@
-const params = new URLSearchParams(location.search);
+/* ========================
+   PHÂN TÍCH URL
+======================== */
+const params = new URLSearchParams(window.location.search);
 const spaceId = params.get("id");
 
+/* ========================
+   ELEMENTS
+======================== */
 const landing = document.getElementById("landing");
 const workspace = document.getElementById("workspace");
 
-/* =========================
+const btnCreate = document.getElementById("btnCreate");
+const linkContainer = document.getElementById("linkContainer");
+const linkInput = document.getElementById("linkInput");
+const btnCopy = document.getElementById("btnCopy");
+const btnOpen = document.getElementById("btnOpen");
+
+/* ========================
    TRANG ĐẠI TRÀ
-========================= */
-const createBtn = document.getElementById("createLink");
-const linkBox = document.getElementById("linkBox");
-const privateLink = document.getElementById("privateLink");
-const copyBtn = document.getElementById("copyBtn");
-const openLink = document.getElementById("openLink");
-
+======================== */
 if (!spaceId) {
-  createBtn.onclick = () => {
+  btnCreate.onclick = () => {
     const uid = crypto.randomUUID();
-    const link = `${location.origin}${location.pathname}?id=${uid}`;
 
-    privateLink.value = link;
-    openLink.href = link;
-    linkBox.classList.remove("hidden");
+    const link =
+      window.location.origin +
+      window.location.pathname +
+      "?id=" +
+      uid;
+
+    linkInput.value = link;
+    btnOpen.href = link;
+
+    linkContainer.style.display = "block";
   };
 
-  copyBtn.onclick = () => {
-    privateLink.select();
-    document.execCommand("copy");
-    alert("Đã sao chép link!");
+  btnCopy.onclick = () => {
+    linkInput.select();
+    linkInput.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(linkInput.value);
+    btnCopy.innerText = "Đã sao chép";
+    setTimeout(() => (btnCopy.innerText = "Sao chép"), 1500);
   };
 }
 
-/* =========================
-   TRANG RIÊNG
-========================= */
+/* ========================
+   WORKSPACE RIÊNG
+======================== */
 if (spaceId) {
-  landing.classList.add("hidden");
-  workspace.classList.remove("hidden");
+  landing.style.display = "none";
+  workspace.style.display = "block";
 
-  const taskInput = document.getElementById("taskInput");
+  const taskText = document.getElementById("taskText");
   const addTask = document.getElementById("addTask");
   const taskList = document.getElementById("taskList");
 
-  const storageKey = "tasks_" + spaceId;
-  const tasks = JSON.parse(localStorage.getItem(storageKey)) || [];
+  const STORAGE_KEY = "WORKSPACE_" + spaceId;
+  let tasks = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
 
-  const render = () => {
+  function render() {
     taskList.innerHTML = "";
-    tasks.forEach((t, i) => {
+    tasks.forEach((task, index) => {
       const li = document.createElement("li");
-      li.textContent = t;
+      li.textContent = task;
       li.onclick = () => {
-        tasks.splice(i, 1);
+        tasks.splice(index, 1);
         save();
       };
       taskList.appendChild(li);
     });
-  };
+  }
 
-  const save = () => {
-    localStorage.setItem(storageKey, JSON.stringify(tasks));
+  function save() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
     render();
-  };
+  }
 
   addTask.onclick = () => {
-    if (taskInput.value.trim()) {
-      tasks.push(taskInput.value.trim());
-      taskInput.value = "";
+    if (taskText.value.trim()) {
+      tasks.push(taskText.value.trim());
+      taskText.value = "";
       save();
     }
   };
