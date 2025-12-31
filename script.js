@@ -1,142 +1,145 @@
-// CẤU HÌNH BAN ĐẦU
-let currentID = new URLSearchParams(window.location.search).get('id');
-let tasks = JSON.parse(localStorage.getItem(`tasks_${currentID}`)) || [];
+// --- LOGIC HỆ THỐNG ---
+const urlParams = new URLSearchParams(window.location.search);
+const roomId = urlParams.get('id');
+let db = JSON.parse(localStorage.getItem(`data_${roomId}`)) || [];
 
-// 1. ĐIỀU HƯỚNG ROUTING
-if (currentID) {
-    document.getElementById('landing-page').classList.remove('active');
-    document.getElementById('dashboard-page').classList.add('active');
-    initDashboard();
+// 1. ĐIỀU HƯỚNG
+if (roomId) {
+    document.getElementById('landing-page').style.display = 'none';
+    document.getElementById('dashboard').classList.add('active');
+    initApp();
 } else {
-    // Tự động tìm ID trong LocalStorage nếu có
-    const savedID = localStorage.getItem('last_room_id');
-    if (savedID) {
-        window.location.href = `?id=${savedID}`;
-    }
+    document.getElementById('landing-page').classList.add('active');
 }
 
-// 2. TẠO LINK ĐỘC QUYỀN
-document.getElementById('create-room-btn').addEventListener('click', () => {
-    const uuid = 'room-' + Math.random().toString(36).substr(2, 9);
-    const fullURL = window.location.origin + window.location.pathname + '?id=' + uuid;
-    
-    document.getElementById('generated-url').value = fullURL;
-    document.getElementById('url-display-area').classList.remove('hidden');
-    localStorage.setItem('last_room_id', uuid);
-});
+// 2. TẠO LINK VÔ HẠN
+document.getElementById('btn-create-link').onclick = () => {
+    const newId = 'room-' + Math.random().toString(36).substring(2, 15);
+    const link = window.location.origin + window.location.pathname + '?id=' + newId;
+    document.getElementById('share-url').value = link;
+    document.getElementById('result-link').classList.remove('hidden');
+    // Lưu lại ID cuối để lần sau tự vào
+    localStorage.setItem('last_visited', newId);
+};
 
-function copyURL() {
-    const copyText = document.getElementById('generated-url');
-    copyText.select();
-    document.execCommand("copy");
-    alert("Đã sao chép link! Hãy dán vào trình duyệt để bắt đầu.");
-}
+document.getElementById('btn-copy').onclick = () => {
+    const input = document.getElementById('share-url');
+    input.select();
+    document.execCommand('copy');
+    alert("Đã sao chép! Hãy dán vào trình duyệt để bắt đầu không gian riêng của ông.");
+};
 
-// 3. AI PHÂN TÍCH TIẾNG VIỆT (MINI PARSER)
-async function aiParseTask(input) {
+// 3. AI PHÂN TÍCH TIẾNG VIỆT (NÂNG CẤP)
+async function processAIInput(text) {
     const status = document.getElementById('ai-status');
-    status.innerText = "🤖 AI đang phân tích dữ liệu...";
+    status.innerText = "🤖 AI đang phân tích lắt léo...";
     
-    // Giả lập xử lý AI (Trong thực tế ông sẽ gọi Gemini API ở đây)
-    // Regex đơn giản để bắt giờ và ngày
-    const timeMatch = input.match(/(\d{1,2})[h:](\d{0,2})/);
-    const dateMatch = input.match(/(\d{1,2})\/(\d{1,2})/);
+    // Giả lập logic AI (Trong thực tế ông sẽ gọi API Gemini ở đây)
+    // Tách ngày (ví dụ: 05/01)
+    const dateMatch = text.match(/(\d{1,2})\/(\d{1,2})/);
+    // Tách giờ (ví dụ: 14h, 14:30)
+    const timeMatch = text.match(/(\d{1,2})(h|:)(\d{0,2})/);
     
-    if (!timeMatch || !dateMatch) {
-        alert("AI nhắc: Bạn thiếu giờ hoặc ngày rồi (VD: 14:00 01/01)");
+    if (!dateMatch || !timeMatch) {
+        status.innerText = "❌ Thiếu ngày hoặc giờ rồi ba ơi!";
         return null;
     }
 
-    const hour = parseInt(timeMatch[1]);
     const day = parseInt(dateMatch[1]);
     const month = parseInt(dateMatch[2]);
-    const taskName = input.replace(timeMatch[0], "").replace(dateMatch[0], "").trim();
+    const hour = parseInt(timeMatch[1]);
+    const min = timeMatch[3] ? parseInt(timeMatch[3]) : 0;
+    const taskName = text.split(/(\d)/)[0].trim() || "Công việc không tên";
 
-    // Check trùng lịch
-    const overlap = tasks.find(t => t.day === day && t.month === month && t.hour === hour);
-    if (overlap) {
-        if (!confirm(`⚠️ Trùng lịch với việc: "${overlap.name}". Bạn có muốn thay thế không?`)) {
-            return null;
-        }
-        tasks = tasks.filter(t => t !== overlap);
+    // Kiểm tra tương lai & quá khứ
+    const inputDate = new Date(2026, month - 1, day, hour, min);
+    const now = new Date();
+    if (inputDate < now) { alert("❌ Không nhập được lịch quá khứ!"); return null; }
+    if (inputDate > new Date(now.getTime() + 28 * 24 * 60 * 60 * 1000)) { 
+        alert("❌ Chỉ nhập được tối đa 4 tuần tới!"); return null; 
     }
 
-    return { name: taskName, hour, day, month, color: `hsl(${Math.random() * 360}, 70%, 60%)` };
+    // Kiểm tra trùng
+    const overlap = db.find(t => t.day === day && t.month === month && t.hour === hour);
+    if (overlap) {
+        if (confirm(`⚠️ Trùng với: "${overlap.name}". Thay thế không?`)) {
+            db = db.filter(t => t !== overlap);
+        } else { return null; }
+    }
+
+    const newTask = {
+        id: Date.now(),
+        name: taskName,
+        day, month, hour, min,
+        color: `hsl(${Math.random() * 360}, 70%, 75%)`
+    };
+    
+    db.push(newTask);
+    saveData();
+    renderAll();
+    status.innerText = "✅ Đã thêm vào lịch!";
 }
 
-// 4. HIỂN THỊ LỊCH TRÌNH
-function initDashboard() {
-    renderWeekGrid();
-    updateClock();
-    setInterval(updateClock, 1000);
-    setInterval(updateAIQuote, 600000); // 10 phút đổi câu hỏi thăm
-}
-
-function renderWeekGrid() {
-    const grid = document.getElementById('week-grid-now');
+// 4. HIỂN THỊ CHI TIẾT
+function renderAll() {
+    const grid = document.getElementById('grid-current-week');
     grid.innerHTML = '';
     const now = new Date();
-    
-    for(let i=0; i<7; i++) {
-        const d = new Date();
-        d.setDate(now.getDate() - now.getDay() + 1 + i); // Bắt đầu từ thứ 2
+    const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay() + 1));
+
+    for (let i = 0; i < 7; i++) {
+        const d = new Date(startOfWeek);
+        d.setDate(d.getDate() + i);
         
-        const dayCol = document.createElement('div');
-        dayCol.className = 'day-column';
-        dayCol.innerHTML = `<div class="day-header">Thứ ${i+2}<br>${d.getDate()}/${d.getMonth()+1}</div>`;
+        const col = document.createElement('div');
+        col.className = 'day-col';
+        col.innerHTML = `<div class="day-header">Thứ ${i+2}<br>${d.getDate()}/${d.getMonth()+1}</div>`;
         
-        // Đổ công việc vào cột
-        tasks.filter(t => t.day === d.getDate() && t.month === (d.getMonth()+1)).forEach(task => {
-            const el = document.createElement('div');
-            el.className = 'task-item';
-            el.style.backgroundColor = task.color;
-            el.style.top = `${(task.hour * 30) + 50}px`; // Mỗi giờ 30px
-            el.innerHTML = `<b>${task.hour}h:</b> ${task.name}`;
+        db.filter(t => t.day === d.getDate() && t.month === (d.getMonth()+1)).forEach(task => {
+            const box = document.createElement('div');
+            box.className = 'task-box';
+            box.style.backgroundColor = task.color;
+            box.style.top = `${(task.hour / 24) * 100}%`;
+            box.innerHTML = `<b>${task.hour}:${task.min.toString().padStart(2,'0')}</b><br>${task.name}`;
             
-            // Click trái nổ pháo hoa
-            el.onclick = (e) => triggerConfetti(e, task);
-            
-            // Click phải xóa
-            el.oncontextmenu = (e) => {
+            box.onclick = () => {
+                confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+                getAIReminder(task.name, task.hour);
+            };
+
+            box.oncontextmenu = (e) => {
                 e.preventDefault();
-                if(confirm("Xóa công việc này?")) {
-                    tasks = tasks.filter(t => t !== task);
-                    saveAndRender();
+                if(confirm("Xóa nhé?")) {
+                    db = db.filter(t => t.id !== task.id);
+                    saveData(); renderAll();
                 }
             };
-            
-            dayCol.appendChild(el);
+            col.appendChild(box);
         });
-        grid.appendChild(dayCol);
+        grid.appendChild(col);
     }
 }
 
-function saveAndRender() {
-    localStorage.setItem(`tasks_${currentID}`, JSON.stringify(tasks));
-    renderWeekGrid();
+function saveData() { localStorage.setItem(`data_${roomId}`, JSON.stringify(db)); }
+
+function initApp() {
+    renderAll();
+    setInterval(() => {
+        document.getElementById('clock').innerText = new Date().toLocaleString();
+    }, 1000);
 }
 
-// HIỆU ỨNG PHÁO HOA & AI GỢI Ý
-function triggerConfetti(e, task) {
-    document.getElementById('confetti-sound').play();
-    const assistantText = document.getElementById('ai-quote');
-    assistantText.innerText = `🤖 Đừng quên: "${task.name}" lúc ${task.hour}h nhé, tui sẽ luôn nhắc em! ❤️`;
-    
-    // Code hiệu ứng pháo hoa đơn giản tại vị trí click...
-    console.log("Pháo hoa tại: ", e.clientX, e.clientY);
-}
-
-document.getElementById('add-task-btn').onclick = async () => {
-    const input = document.getElementById('task-input').value;
-    const taskData = await aiParseTask(input);
-    if (taskData) {
-        tasks.push(taskData);
-        saveAndRender();
-        document.getElementById('task-input').value = "";
-    }
+document.getElementById('btn-add').onclick = () => {
+    const val = document.getElementById('ai-input').value;
+    if(val) processAIInput(val);
 };
 
-function updateClock() {
-    const now = new Date();
-    document.getElementById('real-time-clock').innerText = now.toLocaleString('vi-VN');
+// AI Reminder (Faked Gemini API call)
+function getAIReminder(name, hour) {
+    const msgs = [
+        `Ê bạn hiền, đừng quên ${name} lúc ${hour}h nhé, tui tin ông làm được!`,
+        `Nhắc nhẹ nè: ${name} sắp tới rồi đó, tập trung lên nha.`,
+        `Công việc ${name} đang chờ ông xử đẹp vào lúc ${hour}h đó!`
+    ];
+    document.getElementById('ai-text').innerText = msgs[Math.floor(Math.random()*msgs.length)];
 }
