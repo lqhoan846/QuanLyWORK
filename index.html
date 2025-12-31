@@ -8,42 +8,46 @@
 </head>
 <body>
 
-<!-- ================= LANDING ================= -->
-<section id="landing">
-  <h1>QUẢN LÝ CÔNG VIỆC AI</h1>
-  <p class="subtitle">
-    Kiến tạo không gian làm việc độc bản & riêng tư tuyệt đối.
-  </p>
+  <!-- ===== TRANG TẠO LINK ===== -->
+  <section id="homePage" class="center">
+    <div class="card">
+      <h1>QUẢN LÝ CÔNG VIỆC AI</h1>
+      <p class="subtitle">
+        Kiến tạo không gian làm việc độc bản & riêng tư tuyệt đối
+      </p>
 
-  <button id="btnCreate">TẠO KHÔNG GIAN RIÊNG</button>
+      <button id="btnCreate">TẠO KHÔNG GIAN RIÊNG</button>
 
-  <!-- BOX LINK (BAN ĐẦU ẨN) -->
-  <div id="linkContainer">
-    <label>Link độc quyền của bạn (hãy lưu lại):</label>
+      <div id="linkBox" class="hidden">
+        <label>Link độc quyền của bạn (lưu lại):</label>
+        <input id="privateLink" readonly />
+        <div class="actions">
+          <button id="btnCopy">Sao chép</button>
+          <a id="btnOpen" target="_blank">Mở không gian</a>
+        </div>
+      </div>
 
-    <div class="linkRow">
-      <input id="linkInput" readonly />
-      <button id="btnCopy">Sao chép</button>
+      <p class="credit">Được tạo bởi: LamQuocHoan</p>
     </div>
+  </section>
 
-    <a id="btnOpen" target="_blank">Mở workspace</a>
-  </div>
+  <!-- ===== TRANG RIÊNG ===== -->
+  <section id="workspacePage" class="hidden">
+    <header>
+      <h2>Không gian làm việc riêng</h2>
+      <span id="workspaceId"></span>
+    </header>
 
-  <footer>Được tạo bởi: LamQuocHoan</footer>
-</section>
+    <main>
+      <div class="task-input">
+        <input id="taskText" placeholder="Nhập công việc..." />
+        <button id="addTask">Thêm</button>
+      </div>
 
-<!-- ================= WORKSPACE ================= -->
-<section id="workspace">
-  <h2>Workspace cá nhân</h2>
+      <ul id="taskList"></ul>
+    </main>
+  </section>
 
-  <div class="taskInput">
-    <input id="taskText" placeholder="Nhập công việc..." />
-    <button id="addTask">Thêm</button>
-  </div>
-
-  <ul id="taskList"></ul>
-</section>
-
-<script src="app.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
