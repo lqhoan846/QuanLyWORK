@@ -3,58 +3,73 @@
 <head>
   <meta charset="UTF-8" />
   <title>QUẢN LÝ CÔNG VIỆC BẰNG AI</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <link rel="stylesheet" href="style.css"/>
+  <link rel="stylesheet" href="style.css" />
 </head>
-
 <body>
 
-<!-- HELP -->
+<!-- ICON HỎI -->
 <div id="helpBtn">?</div>
 
-<!-- LANDING -->
-<section id="landing">
+<!-- TRANG ĐẠI TRÀ -->
+<div id="landing" class="screen">
   <h1>QUẢN LÝ CÔNG VIỆC BẰNG AI</h1>
-  <button id="createSpace">TẠO KHÔNG GIAN RIÊNG</button>
-  <div class="creator">Được tạo bởi: LamQuocHoan</div>
-</section>
 
-<!-- DASHBOARD -->
-<section id="dashboard" class="hidden">
+  <button id="createLink">TẠO KHÔNG GIAN RIÊNG</button>
 
-  <header class="top-bar">
-    <input id="taskInput" placeholder="Hãy nhập công việc và thời gian cụ thể"/>
+  <div id="linkBox" class="hidden">
+    <input id="privateLink" readonly />
+    <button id="copyLink">SAO CHÉP LINK</button>
+  </div>
+
+  <footer>Được tạo bởi: LamQuocHoan</footer>
+</div>
+
+<!-- TRANG RIÊNG -->
+<div id="workspace" class="screen hidden">
+
+  <!-- CHÀO LẦN ĐẦU -->
+  <div id="welcomeModal" class="modal hidden">
+    <div class="modal-box">
+      <h2>Xin chào bạn 👋</h2>
+      <p>
+        Tui là hệ thống quản lý công việc thông minh  
+        được tạo bởi Lam Quoc Hoan.  
+        Cậu tên gì thế?
+      </p>
+      <input id="userNameInput" placeholder="Nhập tên của bạn" />
+      <button id="startBtn">BẮT ĐẦU</button>
+    </div>
+  </div>
+
+  <!-- HEADER -->
+  <header>
+    <h2 id="helloText"></h2>
+    <input id="aiInput" placeholder="Hãy nhập công việc và thời gian cụ thể" />
     <button id="addTask">THÊM CÔNG VIỆC</button>
   </header>
 
-  <main class="calendar-wrapper">
-    <div class="week big">
-      <h2>TUẦN NÀY</h2>
-      <div id="calendarThisWeek" class="calendar"></div>
-    </div>
+  <!-- LỊCH -->
+  <main>
+    <section>
+      <h3>TUẦN NÀY</h3>
+      <div id="currentWeek" class="calendar"></div>
+    </section>
 
-    <div class="week small">
-      <h2>TUẦN SAU</h2>
-      <div id="calendarNextWeek" class="calendar"></div>
-    </div>
+    <section class="small">
+      <h3>TUẦN SAU</h3>
+      <div id="nextWeek" class="calendar"></div>
+    </section>
   </main>
 
-  <section class="assistant">
-    <div id="aiMessage" class="chat"></div>
-  </section>
+  <!-- AI MESSAGE -->
+  <div id="aiMessage" class="chat"></div>
 
-  <footer class="bottom-bar">
-    <button id="historyBtn">📘 LỊCH SỬ</button>
-    <button id="futureBtn">🌸 TƯƠNG LAI</button>
-    <span>Được tạo bởi: LamQuocHoan</span>
+  <!-- FOOTER -->
+  <footer class="corner">
+    Được tạo bởi: LamQuocHoan
   </footer>
+</div>
 
-</section>
-
-<!-- MODAL -->
-<div id="overlay" class="hidden"></div>
-<div id="modal" class="hidden"></div>
-
-<script src="app.js" defer></script>
+<script src="app.js"></script>
 </body>
 </html>
