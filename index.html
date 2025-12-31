@@ -16,45 +16,45 @@
 <section id="landing">
   <h1>QUẢN LÝ CÔNG VIỆC BẰNG AI</h1>
   <button id="createSpace">TẠO KHÔNG GIAN RIÊNG</button>
-  <footer>Được tạo bởi: LamQuocHoan</footer>
+  <div class="creator">Được tạo bởi: LamQuocHoan</div>
 </section>
 
 <!-- DASHBOARD -->
 <section id="dashboard" class="hidden">
 
-<header class="top-bar">
-  <input id="taskInput" placeholder="Hãy nhập công việc và thời gian cụ thể"/>
-  <button id="addTask">THÊM CÔNG VIỆC</button>
-</header>
+  <header class="top-bar">
+    <input id="taskInput" placeholder="Hãy nhập công việc và thời gian cụ thể"/>
+    <button id="addTask">THÊM CÔNG VIỆC</button>
+  </header>
 
-<main class="calendar-wrapper">
-  <div class="week big">
-    <h2>TUẦN NÀY</h2>
-    <div id="calendarThisWeek" class="calendar"></div>
-  </div>
+  <main class="calendar-wrapper">
+    <div class="week big">
+      <h2>TUẦN NÀY</h2>
+      <div id="calendarThisWeek" class="calendar"></div>
+    </div>
 
-  <div class="week small">
-    <h2>TUẦN SAU</h2>
-    <div id="calendarNextWeek" class="calendar"></div>
-  </div>
-</main>
+    <div class="week small">
+      <h2>TUẦN SAU</h2>
+      <div id="calendarNextWeek" class="calendar"></div>
+    </div>
+  </main>
 
-<section class="assistant">
-  <div id="aiMessage" class="chat"></div>
+  <section class="assistant">
+    <div id="aiMessage" class="chat"></div>
+  </section>
+
+  <footer class="bottom-bar">
+    <button id="historyBtn">📘 LỊCH SỬ</button>
+    <button id="futureBtn">🌸 TƯƠNG LAI</button>
+    <span>Được tạo bởi: LamQuocHoan</span>
+  </footer>
+
 </section>
 
-<footer class="bottom-bar">
-  <button id="historyBtn">📘 LỊCH SỬ</button>
-  <button id="futureBtn">🌸 TƯƠNG LAI</button>
-  <span>Được tạo bởi: LamQuocHoan</span>
-</footer>
-
-</section>
-
-<!-- OVERLAY + MODAL -->
+<!-- MODAL -->
 <div id="overlay" class="hidden"></div>
 <div id="modal" class="hidden"></div>
 
-<script src="app.js"></script>
+<script src="app.js" defer></script>
 </body>
 </html>
