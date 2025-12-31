@@ -3,66 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>QUẢN LÝ CÔNG VIỆC AI</title>
+    <title>QUẢN LÝ CÔNG VIỆC BẰNG AI</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
 </head>
-<body class="landscape-force">
+<body class="landscape-mode">
+
+    <div id="welcome-modal" class="modal">
+        <div class="modal-content welcome-card glass">
+            <h2>✨ XIN CHÀO BẠN! ✨</h2>
+            <p>Mình là hệ thống quản lý công việc thông minh được tạo bởi <b>LamQuocHoan</b>. Cậu tên gì thế?</p>
+            <input type="text" id="user-name-input" placeholder="Nhập tên của cậu vào đây...">
+            <button id="btn-start-app" class="main-btn">BẮT ĐẦU</button>
+        </div>
+    </div>
+
+    <div id="help-modal" class="modal">
+        <div class="modal-content glass help-card">
+            <span class="close-btn">&times;</span>
+            <h3>📖 HƯỚNG DẪN SỬ DỤNG</h3>
+            <p>1. Nhập <b>Công việc + Thời gian</b> rồi nhấn <b>[THÊM CÔNG VIỆC]</b> để AI tự động sắp xếp.</p>
+            <p>2. Ở phần <b>LỊCH SỬ</b>, cậu có thể xem lại 4 tuần gần nhất.</p>
+            <p>3. Ở phần <b>TƯƠNG LAI</b>, cậu có thể xem 4 tuần sắp tới.</p>
+            <p>⚠️ Những công việc quá 4 tuần sẽ bị xóa mất đó nha!</p>
+            <hr>
+            <p><i>Tôi là Lâm Quốc Hoàn, hy vọng sẽ giúp được bạn phần nào đó hehehehe</i></p>
+        </div>
+    </div>
+
     <div id="landing-page" class="page active">
-        <div class="glass-card">
-            <h1 class="gradient-text">QUẢN LÝ CÔNG VIỆC AI</h1>
+        <div class="landing-content glass">
+            <h1 class="gradient-text">QUẢN LÝ CÔNG VIỆC BẰNG AI</h1>
             <p>Kiến tạo không gian làm việc độc bản & riêng tư tuyệt đối.</p>
-            <button id="btn-create-link" class="main-btn">Tạo Không Gian Riêng Biệt</button>
-            <div id="result-link" class="hidden animate-fade">
-                <p>Link độc quyền của bạn (Hãy lưu lại):</p>
+            <button id="btn-create-link" class="main-btn clickable">Tạo Không Gian Riêng Biệt</button>
+            <div id="result-link" class="hidden">
+                <p>Link độc quyền của cậu (Hãy lưu lại):</p>
                 <div class="input-group">
                     <input type="text" id="share-url" readonly>
-                    <button id="btn-copy">Sao chép</button>
+                    <button id="btn-copy" class="clickable">Sao chép</button>
                 </div>
             </div>
+            <div class="founder-credit">Được tạo bởi: Lam Quoc Hoan</div>
         </div>
     </div>
 
     <div id="dashboard" class="page">
-        <div class="top-bar">
-            <div class="ai-input-zone">
-                <input type="text" id="ai-input" placeholder="Nhập: 'Học tiếng Anh 14h chiều mai' hoặc 'Gym 18h30 02/01'...">
-                <button id="btn-add">Thêm Công Việc</button>
+        <div id="help-icon" class="clickable"><i class="fa-solid fa-circle-question"></i></div>
+        
+        <header class="top-header">
+            <div class="ai-input-wrapper">
+                <input type="text" id="ai-input" placeholder="Hãy nhập công việc và thời gian cụ thể">
+                <button id="btn-add" class="clickable">THÊM CÔNG VIỆC</button>
             </div>
-            <div id="ai-status">AI đang lắng nghe...</div>
-        </div>
+            <div id="ai-status-text">AI đang đợi lệnh từ cậu...</div>
+        </header>
 
-        <div class="app-content">
-            <section class="panel panel-main">
-                <div class="panel-header">
-                    <h2>TUẦN NÀY</h2>
-                    <div id="lunar-info"></div>
-                </div>
-                <div class="calendar-grid" id="grid-current-week">
-                    </div>
-                <div id="ai-assistant-bubble">
-                    <div class="ai-avatar">🤖</div>
-                    <div id="ai-text">Chào ông chủ! Chúc một ngày năng suất nhé.</div>
+        <main class="dashboard-layout">
+            <section class="calendar-panel this-week">
+                <h2 class="panel-title">TUẦN NÀY</h2>
+                <div class="grid-header" id="header-now"></div>
+                <div class="time-grid" id="grid-now"></div>
+                <div class="ai-chat-container">
+                    <div id="ai-bubble" class="bubble">Đang khởi tạo cảm xúc...</div>
                 </div>
             </section>
 
-            <section class="panel panel-side">
-                <div class="panel-header"><h2>TUẦN SAU</h2></div>
-                <div class="summary-list" id="grid-next-week"></div>
+            <section class="calendar-panel next-week">
+                <h2 class="panel-title">TUẦN SAU</h2>
+                <div class="grid-header" id="header-next"></div>
+                <div class="time-grid" id="grid-next"></div>
             </section>
-        </div>
+        </main>
 
-        <div class="bottom-controls">
-            <button id="btn-history" class="small-btn">📁 Lịch sử 4 tuần</button>
-            <div id="clock">00:00:00 - 01/01/2026</div>
-        </div>
+        <footer class="bottom-bar">
+            <div class="nav-btns">
+                <button id="btn-history" class="clickable btn-nav"><i class="fa-solid fa-book"></i> LỊCH SỬ</button>
+                <button id="btn-future" class="clickable btn-nav"><i class="fa-solid fa-seedling"></i> TƯƠNG LAI</button>
+            </div>
+            <div class="footer-info">
+                <div id="real-time-clock"></div>
+                <div class="founder-credit-small">Được tạo bởi: Lam Quoc Hoan</div>
+            </div>
+        </footer>
     </div>
 
-    <div id="modal-history" class="modal">
-        <div class="modal-content glass">
-            <span class="close">&times;</span>
-            <h3>Lịch sử hoạt động (4 tuần gần nhất)</h3>
-            <div class="history-grid" id="history-content"></div>
+    <div id="sub-view" class="modal">
+        <div class="sub-view-content glass">
+            <h2 id="sub-view-title">DỮ LIỆU CỦA CẬU</h2>
+            <div id="week-selector" class="week-list"></div>
+            <div id="detail-view" class="hidden">
+                <button id="btn-back-selector" class="clickable small-btn">QUAY LẠI</button>
+                <div id="selected-week-grid"></div>
+            </div>
+            <button id="btn-exit-sub" class="clickable main-btn">THOÁT</button>
         </div>
     </div>
 
