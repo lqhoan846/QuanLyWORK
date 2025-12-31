@@ -12,18 +12,30 @@
 
 <!-- TRANG ĐẠI TRÀ -->
 <div id="landing" class="screen">
-  <h1>QUẢN LÝ CÔNG VIỆC BẰNG AI</h1>
+  <div class="landing-card">
 
-  <button id="createLink">TẠO KHÔNG GIAN RIÊNG</button>
+    <h1 class="title">QUẢN LÝ CÔNG VIỆC AI</h1>
+    <p class="subtitle">
+      Kiến tạo không gian làm việc độc bản & riêng tư tuyệt đối.
+    </p>
 
-  <div id="linkBox" class="hidden">
-    <input id="privateLink" readonly />
-    <button id="copyLink">SAO CHÉP LINK</button>
+    <button id="createLink" class="primary">
+      TẠO KHÔNG GIAN RIÊNG
+    </button>
+
+    <!-- Ô LINK – BAN ĐẦU ẨN -->
+    <div id="linkBox" class="link-box hidden">
+      <label>Link độc quyền của bạn (Hãy lưu lại):</label>
+      <div class="link-row">
+        <input id="privateLink" readonly />
+        <button id="copyLink" class="copy-btn">Sao chép</button>
+      </div>
+    </div>
+
   </div>
 
   <footer>Được tạo bởi: LamQuocHoan</footer>
 </div>
-
 <!-- TRANG RIÊNG -->
 <div id="workspace" class="screen hidden">
 
@@ -73,3 +85,4 @@
 <script src="app.js"></script>
 </body>
 </html>
+
