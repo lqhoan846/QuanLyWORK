@@ -2,87 +2,38 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <title>QUẢN LÝ CÔNG VIỆC BẰNG AI</title>
+  <title>Quản Lý Công Việc AI</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-<!-- ICON HỎI -->
-<div id="helpBtn">?</div>
+<!-- ===== TRANG ĐẠI TRÀ ===== -->
+<div id="landing" class="center">
+  <h1>QUẢN LÝ CÔNG VIỆC AI</h1>
+  <p>Kiến tạo không gian làm việc độc bản & riêng tư tuyệt đối.</p>
 
-<!-- TRANG ĐẠI TRÀ -->
-<div id="landing" class="screen">
-  <div class="landing-card">
+  <button id="createLink">TẠO KHÔNG GIAN RIÊNG</button>
 
-    <h1 class="title">QUẢN LÝ CÔNG VIỆC AI</h1>
-    <p class="subtitle">
-      Kiến tạo không gian làm việc độc bản & riêng tư tuyệt đối.
-    </p>
-
-    <button id="createLink" class="primary">
-      TẠO KHÔNG GIAN RIÊNG
-    </button>
-
-    <!-- Ô LINK – BAN ĐẦU ẨN -->
-    <div id="linkBox" class="link-box hidden">
-      <label>Link độc quyền của bạn (Hãy lưu lại):</label>
-      <div class="link-row">
-        <input id="privateLink" readonly />
-        <button id="copyLink" class="copy-btn">Sao chép</button>
-      </div>
-    </div>
-
+  <div id="linkBox" class="hidden">
+    <p>Link độc quyền của bạn (hãy lưu lại):</p>
+    <input id="privateLink" readonly />
+    <button id="copyBtn">Sao chép</button>
+    <a id="openLink" target="_blank">Mở workspace</a>
   </div>
 
-  <footer>Được tạo bởi: LamQuocHoan</footer>
+  <small>Được tạo bởi: LamQuocHoan</small>
 </div>
-<!-- TRANG RIÊNG -->
-<div id="workspace" class="screen hidden">
 
-  <!-- CHÀO LẦN ĐẦU -->
-  <div id="welcomeModal" class="modal hidden">
-    <div class="modal-box">
-      <h2>Xin chào bạn 👋</h2>
-      <p>
-        Tui là hệ thống quản lý công việc thông minh  
-        được tạo bởi Lam Quoc Hoan.  
-        Cậu tên gì thế?
-      </p>
-      <input id="userNameInput" placeholder="Nhập tên của bạn" />
-      <button id="startBtn">BẮT ĐẦU</button>
-    </div>
-  </div>
+<!-- ===== TRANG RIÊNG ===== -->
+<div id="workspace" class="hidden">
+  <h2>Workspace cá nhân</h2>
 
-  <!-- HEADER -->
-  <header>
-    <h2 id="helloText"></h2>
-    <input id="aiInput" placeholder="Hãy nhập công việc và thời gian cụ thể" />
-    <button id="addTask">THÊM CÔNG VIỆC</button>
-  </header>
+  <input id="taskInput" placeholder="Nhập công việc..." />
+  <button id="addTask">Thêm</button>
 
-  <!-- LỊCH -->
-  <main>
-    <section>
-      <h3>TUẦN NÀY</h3>
-      <div id="currentWeek" class="calendar"></div>
-    </section>
-
-    <section class="small">
-      <h3>TUẦN SAU</h3>
-      <div id="nextWeek" class="calendar"></div>
-    </section>
-  </main>
-
-  <!-- AI MESSAGE -->
-  <div id="aiMessage" class="chat"></div>
-
-  <!-- FOOTER -->
-  <footer class="corner">
-    Được tạo bởi: LamQuocHoan
-  </footer>
+  <ul id="taskList"></ul>
 </div>
 
 <script src="app.js"></script>
 </body>
 </html>
-
