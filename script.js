@@ -1,201 +1,397 @@
-// --- CẤU HÌNH DỮ LIỆU ---
-let currentUser = { name: "", id: "" };
-let tasks = []; // Lưu trữ công việc
-const icons = ["✨", "🔥", "🌈", "🌸", "⭐", "🍀", "🎈", "🎉", "🦄", "💎"];
+/* =========================================================
+   GLOBAL CONSTANTS & STATE
+========================================================= */
 
-// --- KHỞI TẠO HỆ THỐNG ---
-window.onload = () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const spaceId = urlParams.get('space');
+const APP_NAME = "QUẢN LÝ CÔNG VIỆC BẰNG AI";
+const CREATOR = "LamQuocHoan";
+const MAX_FUTURE_WEEKS = 4;
+const STORAGE_PREFIX = "AI_TASK_MANAGER_";
 
-    if (spaceId) {
-        currentUser.id = spaceId;
-        loadData();
-        showPage('dashboard-page');
-        checkFirstTime();
-    } else {
-        showPage('landing-page');
-    }
-    updateRealTime();
-    setInterval(updateRealTime, 60000);
-    setInterval(aiRandomChat, 600000); // 10 phút chat 1 lần
+let state = {
+  spaceId: null,
+  userName: null,
+  tasks: [],
+  deletedTaskBuffer: null,
 };
 
-function showPage(pageId) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    const target = document.getElementById(pageId);
-    target.style.display = 'flex';
-    target.classList.add('active');
-    if(pageId === 'dashboard-page') renderCalendar();
+/* =========================================================
+   UTILITIES
+========================================================= */
+
+// UUID v4
+function generateId() {
+  return crypto.randomUUID();
 }
 
-// --- LOGIC TẠO LINK ĐỘC QUYỀN ---
-function generateUniqueSpace() {
-    const id = 'user_' + Math.random().toString(36).substr(2, 9);
-    const link = window.location.origin + window.location.pathname + '?space=' + id;
-    document.getElementById('generated-link').value = link;
-    
-    // Rung nhẹ khi tạo xong
-    if (navigator.vibrate) navigator.vibrate(50);
+// Format date time
+function formatDateTime(date) {
+  return date.toLocaleString("vi-VN", {
+    weekday: "long",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
-function copyLink() {
-    const copyText = document.getElementById("generated-link");
-    copyText.select();
-    document.execCommand("copy");
-    alert("Đã sao chép link độc quyền! Hãy lưu lại để sử dụng vĩnh viễn nhé.");
+// Get start of week (Monday)
+function getWeekStart(date) {
+  const d = new Date(date);
+  const day = d.getDay() || 7;
+  if (day !== 1) d.setHours(-24 * (day - 1));
+  d.setHours(0, 0, 0, 0);
+  return d;
 }
 
-// --- LOGIC AI PHÂN TÍCH (SMART PARSING) ---
-function processAITask() {
-    const input = document.getElementById('ai-task-input').value.trim();
-    if (!input) return;
+// Add days
+function addDays(date, days) {
+  const d = new Date(date);
+  d.setDate(d.getDate() + days);
+  return d;
+}
 
-    // AI Logic: Tách thông tin từ câu nói
-    // Ví dụ: "Đi tập gym 17h-19h chiều mai"
-    const analyzed = mockAIAnalyze(input);
+// Save state
+function saveState() {
+  localStorage.setItem(
+    STORAGE_PREFIX + state.spaceId,
+    JSON.stringify({
+      userName: state.userName,
+      tasks: state.tasks,
+    })
+  );
+}
 
-    if (analyzed.error) {
-        updateAIChat(analyzed.error);
-        return;
+// Load state
+function loadState(spaceId) {
+  const raw = localStorage.getItem(STORAGE_PREFIX + spaceId);
+  if (!raw) return null;
+  return JSON.parse(raw);
+}
+
+// Show AI message
+function aiSay(message) {
+  const box = document.getElementById("ai-message-box");
+  box.innerHTML = `💬 <strong>Tui:</strong> ${message}`;
+}
+
+/* =========================================================
+   LANDING PAGE LOGIC
+========================================================= */
+
+function initLanding() {
+  document.getElementById("create-space-btn").onclick = () => {
+    const id = generateId();
+    const url = `${location.origin}${location.pathname}?id=${id}`;
+    document.getElementById("private-link").value = url;
+    navigator.clipboard.writeText(url);
+  };
+
+  document.getElementById("copy-link-btn").onclick = () => {
+    const input = document.getElementById("private-link");
+    if (input.value) {
+      navigator.clipboard.writeText(input.value);
+      alert("Đã sao chép link rồi nè ✨");
+    }
+  };
+}
+
+/* =========================================================
+   DASHBOARD INIT
+========================================================= */
+
+function initDashboard(spaceId) {
+  state.spaceId = spaceId;
+
+  const stored = loadState(spaceId);
+  if (stored) {
+    state.userName = stored.userName;
+    state.tasks = stored.tasks || [];
+  }
+
+  if (!state.userName) {
+    showWelcomeModal();
+  } else {
+    aiSay(`Chào ${state.userName} nhaaa 🌷 Hôm nay mình làm gì tiếp nè?`);
+  }
+
+  renderClock();
+  setInterval(renderClock, 1000);
+
+  renderCalendar();
+  bindTaskInput();
+}
+
+/* =========================================================
+   WELCOME MODAL
+========================================================= */
+
+function showWelcomeModal() {
+  const modal = document.getElementById("welcome-modal");
+  const overlay = document.getElementById("overlay");
+  modal.classList.remove("hidden");
+  overlay.classList.remove("hidden");
+
+  document.getElementById("start-btn").onclick = () => {
+    const name = document.getElementById("user-name-input").value.trim();
+    if (!name) return;
+    state.userName = name;
+    saveState();
+    modal.classList.add("hidden");
+    overlay.classList.add("hidden");
+    aiSay(`Rất vui được gặp ${name} 🥰 Tui sẽ giúp cậu quản lý mọi thứ nha!`);
+  };
+}
+
+/* =========================================================
+   CLOCK
+========================================================= */
+
+function renderClock() {
+  document.getElementById("live-clock").innerText =
+    "⏰ " + new Date().toLocaleString("vi-VN");
+}
+
+/* =========================================================
+   AI PARSING (SMART)
+========================================================= */
+/*
+  Mô phỏng AI parsing thông minh:
+  - Nhận tiếng Việt
+  - Hiểu viết tắt
+  - Tách: tên công việc, ngày, giờ bắt đầu, giờ kết thúc
+*/
+
+function parseTask(input) {
+  input = input.toLowerCase();
+
+  const timeRegex = /(\d{1,2})[:h](\d{0,2})?\s*(?:-|đến)\s*(\d{1,2})[:h]?(\d{0,2})?/;
+  const dateRegex = /(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{4}))?/;
+
+  const timeMatch = input.match(timeRegex);
+  const dateMatch = input.match(dateRegex);
+
+  if (!timeMatch || !dateMatch) {
+    return { error: "Thiếu ngày hoặc giờ rồi đó 🥲 Nhập lại giúp tui nha!" };
+  }
+
+  const startHour = parseInt(timeMatch[1]);
+  const startMin = parseInt(timeMatch[2] || "0");
+  const endHour = parseInt(timeMatch[3]);
+  const endMin = parseInt(timeMatch[4] || "0");
+
+  const day = parseInt(dateMatch[1]);
+  const month = parseInt(dateMatch[2]) - 1;
+  const year = parseInt(dateMatch[3] || new Date().getFullYear());
+
+  const start = new Date(year, month, day, startHour, startMin);
+  const end = new Date(year, month, day, endHour, endMin);
+
+  if (start < new Date()) {
+    return { error: "Không nhập công việc trong quá khứ được đâu nè 😭" };
+  }
+
+  const maxFuture = addDays(new Date(), MAX_FUTURE_WEEKS * 7);
+  if (start > maxFuture) {
+    return { error: "Xa quá rồi á 😵 Chỉ nhập tối đa 4 tuần thôi nha!" };
+  }
+
+  const title = input
+    .replace(timeRegex, "")
+    .replace(dateRegex, "")
+    .trim()
+    .slice(0, 30);
+
+  return {
+    title: title || "Công việc mới",
+    start,
+    end,
+  };
+}
+
+/* =========================================================
+   TASK INPUT
+========================================================= */
+
+function bindTaskInput() {
+  document.getElementById("add-task-btn").onclick = () => {
+    const input = document.getElementById("task-input");
+    if (!input.value.trim()) return;
+
+    const parsed = parseTask(input.value);
+
+    if (parsed.error) {
+      aiSay(parsed.error);
+      return;
     }
 
-    // Kiểm tra trùng lịch
-    const isOverlap = checkOverlap(analyzed);
-    if (isOverlap) {
-        if (confirm(`Ê, định phân thân chi thuật à? Trùng lịch với việc "${isOverlap.title}" rồi! Thay thế luôn không?`)) {
-            tasks = tasks.filter(t => t.id !== isOverlap.id);
-        } else {
-            return;
-        }
+    const overlap = state.tasks.find(
+      t =>
+        (parsed.start < new Date(t.end) &&
+          parsed.end > new Date(t.start))
+    );
+
+    if (overlap) {
+      aiSay(
+        `Ê ${state.userName} 😆 Định phân thân chi thuật à? Trùng với "${overlap.title}" đó!`
+      );
+      return;
     }
 
-    // Thêm công việc
-    const newTask = {
-        id: Date.now(),
-        ...analyzed,
-        color: `hsl(${Math.random() * 360}, 70%, 60%)`
+    const task = {
+      id: generateId(),
+      title: parsed.title,
+      start: parsed.start,
+      end: parsed.end,
+      color: randomColor(),
     };
 
-    tasks.push(newTask);
-    saveData();
+    state.tasks.push(task);
+    saveState();
+    input.value = "";
+
+    firework();
+    aiSay(`Đã thêm "${task.title}" rồi nha ✨ Cố lên ${state.userName} ơiii!`);
     renderCalendar();
-    triggerCelebration();
-    document.getElementById('ai-task-input').value = "";
-    updateAIChat(`Xong rồi nhé ${currentUser.name}! Tui đã thêm "${analyzed.title}" vào lịch của cậu.`);
+  };
 }
 
-function mockAIAnalyze(text) {
-    // Đây là nơi xử lý Logic Tiếng Việt (Viết tắt, thời gian)
-    // Phác thảo nhanh bộ lọc:
-    let title = text.split('lúc')[0].split('từ')[0].substring(0, 20);
-    let hourStart = text.match(/(\d{1,2})h/)?.[1] || 8;
-    let day = new Date(); // Mặc định hôm nay
-    
-    if (text.includes("mai")) day.setDate(day.getDate() + 1);
-    
-    // Cảnh báo quá khứ/tương lai 4 tuần (Logic chặn)
-    // ... logic kiểm tra date ...
+/* =========================================================
+   CALENDAR RENDER
+========================================================= */
 
-    return {
-        title: title.trim(),
-        startTime: parseInt(hourStart),
-        endTime: parseInt(hourStart) + 1,
-        date: day.toISOString().split('T')[0]
-    };
-}
-
-// --- HIỆU ỨNG TƯƠNG TÁC ---
-function triggerCelebration() {
-    // Hiệu ứng pháo hoa đơn giản bằng các hạt màu
-    for (let i = 0; i < 20; i++) {
-        createFlyingIcon(window.innerWidth / 2, window.innerHeight / 2);
-    }
-}
-
-function createFlyingIcon(x, y) {
-    const icon = document.createElement('div');
-    icon.className = 'flying-icon';
-    icon.innerText = icons[Math.floor(Math.random() * icons.length)];
-    icon.style.left = x + 'px';
-    icon.style.top = y + 'px';
-    document.body.appendChild(icon);
-    setTimeout(() => icon.remove(), 800);
-}
-
-// --- QUẢN LÝ DỮ LIỆU ---
-function saveData() {
-    localStorage.setItem(`tasks_${currentUser.id}`, JSON.stringify(tasks));
-    localStorage.setItem(`user_${currentUser.id}`, JSON.stringify(currentUser));
-}
-
-function loadData() {
-    const savedTasks = localStorage.getItem(`tasks_${currentUser.id}`);
-    const savedUser = localStorage.getItem(`user_${currentUser.id}`);
-    if (savedTasks) tasks = JSON.parse(savedTasks);
-    if (savedUser) currentUser = JSON.parse(savedUser);
-}
-
-// --- RENDER GIAO DIỆN ---
 function renderCalendar() {
-    const grid = document.getElementById('current-week-grid');
-    grid.innerHTML = "";
-    
-    const weekdays = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "Chủ Nhật"];
-    
-    weekdays.forEach((day, index) => {
-        const col = document.createElement('div');
-        col.className = 'day-column';
-        col.innerHTML = `<div class="day-header"><strong>${day}</strong><span>(12/10)</span></div>`;
-        
-        // Render task của ngày này
-        const dayTasks = tasks.filter(t => true); // Logic lọc theo ngày thực tế
-        dayTasks.forEach(task => {
-            const card = document.createElement('div');
-            card.className = 'task-card';
-            card.style.backgroundColor = task.color;
-            card.innerHTML = `<b>${task.startTime}h:</b> ${task.title}`;
-            card.onclick = (e) => {
-                createFlyingIcon(e.clientX, e.clientY);
-                updateAIChat(`Cố gắng hoàn thành ${task.title} nhé ${currentUser.name}!`);
-            };
-            card.oncontextmenu = (e) => {
-                e.preventDefault();
-                if(confirm("Tui xóa công việc này nhé?")) {
-                    tasks = tasks.filter(t => t.id !== task.id);
-                    saveData(); renderCalendar();
-                }
-            };
-            col.appendChild(card);
-        });
-        
-        grid.appendChild(col);
-    });
+  const grid = document.getElementById("current-week-grid");
+  grid.innerHTML = "";
+
+  const weekStart = getWeekStart(new Date());
+
+  for (let i = 0; i < 7; i++) {
+    const day = addDays(weekStart, i);
+    const col = document.createElement("div");
+    col.innerHTML = `<strong>${day.toLocaleDateString("vi-VN", {
+      weekday: "short",
+      day: "2-digit",
+      month: "2-digit",
+    })}</strong>`;
+
+    state.tasks
+      .filter(
+        t =>
+          new Date(t.start).toDateString() === day.toDateString()
+      )
+      .forEach(task => {
+        const el = document.createElement("div");
+        el.style.background = task.color;
+        el.style.marginTop = "6px";
+        el.style.padding = "6px";
+        el.style.borderRadius = "10px";
+        el.style.fontSize = "12px";
+        el.innerHTML = `<strong>${task.title}</strong><br>
+        ${new Date(task.start).toLocaleTimeString("vi-VN", {
+          hour: "2-digit",
+          minute: "2-digit",
+        })} - ${new Date(task.end).toLocaleTimeString("vi-VN", {
+          hour: "2-digit",
+          minute: "2-digit",
+        })}`;
+
+        el.oncontextmenu = e => {
+          e.preventDefault();
+          deleteTask(task.id);
+        };
+
+        col.appendChild(el);
+      });
+
+    grid.appendChild(col);
+  }
 }
 
-// --- CHỨC NĂNG PHỤ ---
-function saveUserName() {
-    const name = document.getElementById('user-name-input').value;
-    if (name) {
-        currentUser.name = name;
-        saveData();
-        toggleModal('welcome-modal');
-        updateAIChat(`Rất vui được gặp cậu, ${name}! Tụi mình cùng bắt đầu làm việc nhé.`);
-    }
+/* =========================================================
+   DELETE + UNDO
+========================================================= */
+
+function deleteTask(id) {
+  const index = state.tasks.findIndex(t => t.id === id);
+  if (index === -1) return;
+
+  state.deletedTaskBuffer = state.tasks[index];
+  state.tasks.splice(index, 1);
+  saveState();
+  renderCalendar();
+
+  aiSay(
+    `Tui xóa công việc này nhé? 😢 Nếu hối hận thì reload trang trong 10s nè!`
+  );
+
+  setTimeout(() => {
+    state.deletedTaskBuffer = null;
+  }, 10000);
 }
 
-function updateAIChat(msg) {
-    const bubble = document.querySelector('.ai-bubble');
-    bubble.innerText = msg;
-    bubble.parentElement.classList.add('pulse');
-    setTimeout(() => bubble.parentElement.classList.remove('pulse'), 500);
+/* =========================================================
+   EFFECTS
+========================================================= */
+
+function firework() {
+  const icons = ["✨", "🌸", "💫", "🎉", "🌟", "🫧"];
+  const icon = icons[Math.floor(Math.random() * icons.length)];
+
+  const el = document.createElement("div");
+  el.innerText = icon;
+  el.style.position = "fixed";
+  el.style.left = "50%";
+  el.style.top = "50%";
+  el.style.fontSize = "32px";
+  el.style.animation = "pop 0.6s ease";
+  document.body.appendChild(el);
+
+  setTimeout(() => el.remove(), 600);
 }
 
-function toggleModal(id) {
-    const m = document.getElementById(id);
-    m.style.display = (m.style.display === 'block') ? 'none' : 'block';
+function randomColor() {
+  const colors = [
+    "#ffd6e0",
+    "#d6f0ff",
+    "#e7ffd6",
+    "#fff2cc",
+    "#e5ddff",
+  ];
+  return colors[Math.floor(Math.random() * colors.length)];
 }
 
-function checkFirstTime() {
-    if (!currentUser.name) toggleModal('welcome-modal');
-}
+/* =========================================================
+   HELP MODAL
+========================================================= */
+
+document.getElementById("help-btn").onclick = () => {
+  document.getElementById("guide-modal").classList.remove("hidden");
+  document.getElementById("overlay").classList.remove("hidden");
+};
+
+document.querySelectorAll(".close-modal").forEach(btn => {
+  btn.onclick = () => {
+    document.getElementById("guide-modal").classList.add("hidden");
+    document.getElementById("overlay").classList.add("hidden");
+  };
+});
+
+/* =========================================================
+   BOOTSTRAP
+========================================================= */
+
+window.onload = () => {
+  document.getElementById("app-loading").remove();
+
+  const params = new URLSearchParams(location.search);
+  const id = params.get("id");
+
+  if (!id) {
+    document.getElementById("landing-page").classList.remove("hidden");
+    initLanding();
+  } else {
+    document.getElementById("dashboard-page").classList.remove("hidden");
+    initDashboard(id);
+  }
+};
