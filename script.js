@@ -1,120 +1,142 @@
-// --- QUẢN LÝ DỮ LIỆU & AI LOGIC ---
-let userData = {
-    name: "",
-    tasks: [] // {id, title, date, startTime, endTime, color}
+/* ===== INIT ===== */
+const qs = new URLSearchParams(location.search);
+let spaceId = qs.get("id");
+
+const landing = document.getElementById("landing");
+const dashboard = document.getElementById("dashboard");
+
+if (!spaceId) landing.classList.remove("hidden");
+else init(spaceId);
+
+document.getElementById("createSpace").onclick = () => {
+  const id = crypto.randomUUID();
+  location.search = "?id=" + id;
 };
 
-const COLORS = ['#FFB7B2', '#FFDAC1', '#E2F0CB', '#B5EAD7', '#C7CEEA', '#F3FFE3'];
+/* ===== DATA ===== */
+function load() {
+  return JSON.parse(localStorage.getItem("space_"+spaceId)) 
+  || { name:null, tasks:[] };
+}
+function save(d) {
+  localStorage.setItem("space_"+spaceId, JSON.stringify(d));
+}
 
-// Khởi tạo trang
-window.onload = () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const id = urlParams.get('id');
+/* ===== INIT SPACE ===== */
+function init(id){
+  landing.classList.add("hidden");
+  dashboard.classList.remove("hidden");
+  const data = load();
+  if(!data.name) askName(data);
+  renderWeek(0,"calendarThisWeek");
+  renderWeek(7,"calendarNextWeek");
+  ai(`Chào ${data.name||"bạn"} nha 🌱`);
+}
 
-    if (id) {
-        document.getElementById('landing-page').classList.add('hidden');
-        document.getElementById('dashboard').classList.remove('hidden');
-        loadData(id);
-        checkFirstTime();
-    }
+/* ===== AI PARSER ===== */
+function parse(text){
+  const time = text.match(/(\d{1,2})h\s*-\s*(\d{1,2})h/);
+  const date = text.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if(!time||!date) return null;
+  return {
+    title:text.replace(time[0],"").replace(date[0],"").trim(),
+    start:+time[1],
+    end:+time[2],
+    date:`${date[3]}-${date[2]}-${date[1]}`
+  };
+}
+
+/* ===== ADD TASK ===== */
+document.getElementById("addTask").onclick=()=>{
+  const input = taskInput.value;
+  const p = parse(input);
+  if(!p){ ai("Tui chưa hiểu rõ giờ hoặc ngày 😗"); return; }
+  const d = load();
+  d.tasks.push({...p,color:randColor()});
+  save(d);
+  renderWeek(0,"calendarThisWeek");
+  ai("Xong rồi nè ✨");
 };
 
-// Hàm giả lập AI hiểu tiếng Việt (NLP đơn giản)
-async function parseTaskAI(input) {
-    // Trong thực tế, đây sẽ là nơi gọi API Gemini/OpenAI
-    // Ở đây mình tạo logic xử lý thông minh cho bạn
-    const prompt = input.toLowerCase();
-    
-    // Ví dụ phân tích: "Mai 8h sáng đi học tới 10h"
-    let date = new Date();
-    if(prompt.includes("mai")) date.setDate(date.getDate() + 1);
-    
-    // Logic tìm giờ (RegEx)
-    const timeMatch = prompt.match(/(\d{1,2})h/g);
-    if (!timeMatch) return { error: "Cậu ơi, cho tui xin giờ giấc cụ thể với nha!" };
+/* ===== CALENDAR ===== */
+function renderWeek(offset,target){
+  const cal = document.getElementById(target);
+  cal.innerHTML="";
+  const start = startOfWeek(offset);
 
-    return {
-        title: input.split(' lúc')[0], // Tạm thời lấy phần trước chữ lúc
-        date: date.toISOString().split('T')[0],
-        startTime: timeMatch[0],
-        endTime: timeMatch[1] || (parseInt(timeMatch[0]) + 1) + "h",
-        color: COLORS[Math.floor(Math.random() * COLORS.length)]
-    };
+  for(let i=0;i<7;i++){
+    const d = new Date(start);
+    d.setDate(d.getDate()+i);
+    cal.appendChild(dayHeader(d));
+  }
+
+  for(let h=0;h<24*7;h++) cal.appendChild(document.createElement("div"));
+
+  const data = load();
+  data.tasks.forEach(t=>{
+    const td = new Date(t.date);
+    if(td>=start && td<new Date(start.getTime()+7*864e5)){
+      const day = (td.getDay()+6)%7;
+      const pos = 7 + day + (t.start*7);
+      const el = document.createElement("div");
+      el.className="task";
+      el.style.background=t.color;
+      el.style.gridRow=`${t.start+2} / ${t.end+2}`;
+      el.style.gridColumn=day+1;
+      el.innerHTML=`<b>${t.start}h-${t.end}h</b><br>${t.title}`;
+      cal.appendChild(el);
+    }
+  });
 }
 
-// Hàm thêm công việc
-document.getElementById('btn-add-task').addEventListener('click', async () => {
-    const input = document.getElementById('ai-task-input').value;
-    if (!input) return;
-
-    const result = await parseTaskAI(input);
-    
-    if (result.error) {
-        showAIMessage(result.error);
-        return;
-    }
-
-    // Kiểm tra trùng lịch
-    const isOverlap = userData.tasks.find(t => t.date === result.date && t.startTime === result.startTime);
-    if (isOverlap) {
-        if (confirm(`Ê, định phân thân chi thuật à? Trùng lịch với việc "${isOverlap.title}" rồi! Thay thế luôn không?`)) {
-            // Logic thay thế
-        }
-        return;
-    }
-
-    // Hiệu ứng pháo hoa khi thêm thành công
-    confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 }
-    });
-
-    userData.tasks.push(result);
-    saveData();
-    renderCalendars();
-    showAIMessage(`Tui đã thêm "${result.title}" vào lịch cho cậu rồi nhé!`);
-});
-
-// Hiển thị tin nhắn AI "Dễ thương"
-function showAIMessage(msg) {
-    const bubble = document.getElementById('ai-status-bubble');
-    const text = document.getElementById('ai-message');
-    bubble.classList.remove('hidden');
-    text.innerText = `Tui: ${msg}`;
+/* ===== DAY HEADER + LUNAR (MOCK) ===== */
+function dayHeader(d){
+  const div = document.createElement("div");
+  div.className="day-header";
+  div.innerHTML=`
+    <div>Thứ ${d.getDay()==0?"CN":d.getDay()+1}</div>
+    <div>(${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()})</div>
+    <div class="lunar">(Âm ${d.getDate()}/${d.getMonth()+1})</div>
+  `;
+  return div;
 }
 
-// Hiệu ứng Icon bay khi click vào task
-function spawnIcons(e) {
-    const icons = ['✨', '🌸', '🔥', '🎈', '⭐'];
-    const icon = icons[Math.floor(Math.random() * icons.length)];
-    for (let i = 0; i < 10; i++) {
-        const span = document.createElement('span');
-        span.innerText = icon;
-        span.style.position = 'fixed';
-        span.style.left = e.clientX + 'px';
-        span.style.top = e.clientY + 'px';
-        span.style.pointerEvents = 'none';
-        span.style.fontSize = '20px';
-        span.animate([
-            { transform: 'translate(0, 0) scale(1)', opacity: 1 },
-            { transform: `translate(${(Math.random()-0.5)*200}px, ${(Math.random()-0.5)*200}px) scale(0)`, opacity: 0 }
-        ], { duration: 1000, easing: 'ease-out' });
-        document.body.appendChild(span);
-        setTimeout(() => span.remove(), 1000);
-    }
+/* ===== UTILS ===== */
+function startOfWeek(offset){
+  const d=new Date();
+  d.setDate(d.getDate()+offset);
+  const day=(d.getDay()+6)%7;
+  d.setDate(d.getDate()-day);
+  d.setHours(0,0,0,0);
+  return d;
+}
+function randColor(){
+  return `hsl(${Math.random()*360},70%,70%)`;
+}
+function ai(t){
+  document.getElementById("aiMessage").innerText=t;
 }
 
-// Quản lý ID độc nhất
-document.getElementById('btn-create-space').onclick = () => {
-    const uniqueID = 'space_' + Math.random().toString(36).substr(2, 9);
-    const url = window.location.origin + window.location.pathname + '?id=' + uniqueID;
-    
-    document.getElementById('url-display-area').classList.remove('hidden');
-    document.getElementById('exclusive-url').value = url;
-};
-
-// Ngữ pháp tiếng Anh bổ trợ cho bạn (TOEIC 800+ focus)
-// Cấu trúc: Subject + Verb + Object + Adverbial of Time
-// Ví dụ: I (S) will finish (V) the report (O) tomorrow (Time).
-// Từ vựng: "Productivity" (Năng suất), "Reschedule" (Đổi lịch), "Conflict" (Xung đột/Trùng lịch).
+/* ===== NAME MODAL ===== */
+function askName(d){
+  show(`
+    <h3>Xin chào bạn 🌸</h3>
+    <p>Mình là hệ thống quản lý công việc thông minh được tạo bởi Lam Quoc Hoan.</p>
+    <input id="n" placeholder="Tên của bạn"/>
+    <button id="ok">BẮT ĐẦU</button>
+  `);
+  ok.onclick=()=>{
+    d.name=n.value;
+    save(d);
+    close();
+  }
+}
+function show(html){
+  overlay.classList.remove("hidden");
+  modal.innerHTML=html;
+  modal.classList.remove("hidden");
+}
+function close(){
+  overlay.classList.add("hidden");
+  modal.classList.add("hidden");
+}
