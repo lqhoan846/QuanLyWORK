@@ -1,16 +1,17 @@
 * {
   box-sizing: border-box;
-  font-family: Arial, sans-serif;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 body {
   margin: 0;
-  height: 100vh;
-  background: linear-gradient(135deg, #e8ecff, #f6f7fb);
+  min-height: 100vh;
+  background: linear-gradient(135deg, #eef1ff, #f7f9fc);
 }
 
-.center {
-  height: 100%;
+/* ===== LANDING ===== */
+#landing {
+  height: 100vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -18,45 +19,98 @@ body {
 }
 
 h1 {
+  font-size: 36px;
   background: linear-gradient(90deg, #6a5cff, #4cc9f0);
   -webkit-background-clip: text;
   color: transparent;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  color: #555;
+  margin-bottom: 20px;
 }
 
 button {
-  padding: 10px 16px;
-  margin-top: 10px;
+  padding: 10px 18px;
+  border-radius: 10px;
   border: none;
-  border-radius: 8px;
-  cursor: pointer;
   background: #6a5cff;
   color: white;
+  cursor: pointer;
+  font-size: 14px;
 }
 
-#linkBox {
-  margin-top: 20px;
+button:hover {
+  opacity: 0.9;
+}
+
+#linkContainer {
+  display: none;
+  margin-top: 25px;
   background: white;
-  padding: 15px;
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0,0,0,.1);
+  padding: 18px;
+  border-radius: 14px;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.12);
+  width: 320px;
 }
 
-#linkBox input {
-  width: 260px;
+#linkContainer label {
+  font-size: 13px;
+  color: #333;
+}
+
+.linkRow {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+#linkInput {
+  flex: 1;
   padding: 6px;
 }
 
+#btnOpen {
+  display: inline-block;
+  margin-top: 10px;
+  text-decoration: none;
+  color: #6a5cff;
+  font-weight: bold;
+}
+
+footer {
+  margin-top: 30px;
+  font-size: 12px;
+  color: #777;
+}
+
+/* ===== WORKSPACE ===== */
 #workspace {
+  display: none;
   padding: 30px;
+}
+
+.taskInput {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 15px;
+}
+
+#taskText {
+  flex: 1;
+  padding: 8px;
 }
 
 #taskList li {
   background: white;
-  margin: 8px 0;
-  padding: 8px;
-  border-radius: 6px;
+  margin-bottom: 8px;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
 }
 
-.hidden {
-  display: none;
+#taskList li:hover {
+  text-decoration: line-through;
+  opacity: 0.7;
 }
