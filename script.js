@@ -1,145 +1,193 @@
-// --- LOGIC HỆ THỐNG ---
-const urlParams = new URLSearchParams(window.location.search);
-const roomId = urlParams.get('id');
-let db = JSON.parse(localStorage.getItem(`data_${roomId}`)) || [];
+// Cấu hình dữ liệu và ID
+const params = new URLSearchParams(window.location.search);
+const roomId = params.get('id');
+let userData = JSON.parse(localStorage.getItem(`data_${roomId}`)) || { name: '', tasks: [] };
 
-// 1. ĐIỀU HƯỚNG
+// Hệ thống Icon phong phú
+const iconLibrary = ["❤️", "⭐", "🔥", "🚀", "🌈", "🎈", "🍀", "🌸", "🍔", "🎸", "📚", "⚽", "🐱", "🐶", "🍦", "🍎", "⚡", "💎"];
+
+// 1. KHỞI CHẠY HỆ THỐNG
 if (roomId) {
-    document.getElementById('landing-page').style.display = 'none';
+    document.getElementById('landing-page').classList.remove('active');
     document.getElementById('dashboard').classList.add('active');
-    initApp();
+    
+    // Kiểm tra tên người dùng
+    if (!userData.name) {
+        document.getElementById('welcome-modal').classList.add('active');
+    } else {
+        initDashboard();
+    }
 } else {
     document.getElementById('landing-page').classList.add('active');
 }
 
 // 2. TẠO LINK VÔ HẠN
 document.getElementById('btn-create-link').onclick = () => {
-    const newId = 'room-' + Math.random().toString(36).substring(2, 15);
+    const newId = 'room-' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
     const link = window.location.origin + window.location.pathname + '?id=' + newId;
     document.getElementById('share-url').value = link;
     document.getElementById('result-link').classList.remove('hidden');
-    // Lưu lại ID cuối để lần sau tự vào
-    localStorage.setItem('last_visited', newId);
 };
 
 document.getElementById('btn-copy').onclick = () => {
     const input = document.getElementById('share-url');
     input.select();
     document.execCommand('copy');
-    alert("Đã sao chép! Hãy dán vào trình duyệt để bắt đầu không gian riêng của ông.");
+    alert("Đã sao chép link độc quyền! Hãy lưu lại nhé.");
 };
 
-// 3. AI PHÂN TÍCH TIẾNG VIỆT (NÂNG CẤP)
-async function processAIInput(text) {
-    const status = document.getElementById('ai-status');
-    status.innerText = "🤖 AI đang phân tích lắt léo...";
-    
-    // Giả lập logic AI (Trong thực tế ông sẽ gọi API Gemini ở đây)
-    // Tách ngày (ví dụ: 05/01)
+// 3. XỬ LÝ TÊN NGƯỜI DÙNG
+document.getElementById('btn-start-app').onclick = () => {
+    const nameInput = document.getElementById('user-name-input').value.trim();
+    if (nameInput) {
+        userData.name = nameInput;
+        saveData();
+        document.getElementById('welcome-modal').classList.remove('active');
+        initDashboard();
+    }
+};
+
+// 4. AI PHÂN TÍCH NHẬN DẠNG LẮT LÉO (Brain AI)
+async function aiSmartParse(input) {
+    const status = document.getElementById('ai-status-text');
+    status.innerHTML = "🌀 AI đang 'vắt óc' phân tích...";
+
+    // Giả lập xử lý ngôn ngữ tự nhiên
+    const text = input.toLowerCase();
     const dateMatch = text.match(/(\d{1,2})\/(\d{1,2})/);
-    // Tách giờ (ví dụ: 14h, 14:30)
-    const timeMatch = text.match(/(\d{1,2})(h|:)(\d{0,2})/);
-    
-    if (!dateMatch || !timeMatch) {
-        status.innerText = "❌ Thiếu ngày hoặc giờ rồi ba ơi!";
+    const timeMatches = text.match(/(\d{1,2})[h:](\d{0,2})/g);
+
+    if (!dateMatch || !timeMatches) {
+        status.innerHTML = "❌ Cậu ơi, thiếu ngày hoặc giờ rồi!";
         return null;
     }
 
     const day = parseInt(dateMatch[1]);
     const month = parseInt(dateMatch[2]);
-    const hour = parseInt(timeMatch[1]);
-    const min = timeMatch[3] ? parseInt(timeMatch[3]) : 0;
-    const taskName = text.split(/(\d)/)[0].trim() || "Công việc không tên";
+    const startHour = parseInt(timeMatches[0]);
+    const endHour = timeMatches[1] ? parseInt(timeMatches[1]) : startHour + 1;
 
-    // Kiểm tra tương lai & quá khứ
-    const inputDate = new Date(2026, month - 1, day, hour, min);
-    const now = new Date();
-    if (inputDate < now) { alert("❌ Không nhập được lịch quá khứ!"); return null; }
-    if (inputDate > new Date(now.getTime() + 28 * 24 * 60 * 60 * 1000)) { 
-        alert("❌ Chỉ nhập được tối đa 4 tuần tới!"); return null; 
-    }
+    // Tóm tắt tên công việc (Loại bỏ các cụm từ chỉ thời gian)
+    let taskName = text.replace(dateMatch[0], "").replace(/(\d{1,2})[h:](\d{0,2})/g, "").trim();
+    taskName = taskName || "Công việc không tên";
 
-    // Kiểm tra trùng
-    const overlap = db.find(t => t.day === day && t.month === month && t.hour === hour);
+    // Kiểm tra trùng lịch
+    const overlap = userData.tasks.find(t => t.day === day && t.month === month && t.startHour === startHour);
     if (overlap) {
-        if (confirm(`⚠️ Trùng với: "${overlap.name}". Thay thế không?`)) {
-            db = db.filter(t => t !== overlap);
-        } else { return null; }
+        if (!confirm(`Cảnh báo: Cậu đã có việc "${overlap.name}" lúc này rồi. Có xóa việc cũ để thay việc này không?`)) return null;
+        userData.tasks = userData.tasks.filter(t => t !== overlap);
     }
 
-    const newTask = {
-        id: Date.now(),
-        name: taskName,
-        day, month, hour, min,
-        color: `hsl(${Math.random() * 360}, 70%, 75%)`
+    return { 
+        id: Date.now(), 
+        name: taskName.toUpperCase(), 
+        day, month, 
+        startHour, endHour, 
+        color: `hsl(${Math.random() * 360}, 70%, 60%)` 
     };
-    
-    db.push(newTask);
-    saveData();
-    renderAll();
-    status.innerText = "✅ Đã thêm vào lịch!";
 }
 
-// 4. HIỂN THỊ CHI TIẾT
-function renderAll() {
-    const grid = document.getElementById('grid-current-week');
-    grid.innerHTML = '';
+// 5. HIỆN THỊ DASHBOARD
+function initDashboard() {
+    renderGrids();
+    updateAIQuote();
+    setInterval(updateAIQuote, 600000); // 10 phút
+    document.getElementById('real-time-clock').innerText = new Date().toLocaleString();
+    setInterval(() => {
+        document.getElementById('real-time-clock').innerText = new Date().toLocaleString();
+    }, 1000);
+}
+
+function renderGrids() {
+    renderWeek('grid-now', 'header-now', 0); // Tuần này
+    renderWeek('grid-next', 'header-next', 7); // Tuần sau
+}
+
+function renderWeek(gridId, headerId, offset) {
+    const grid = document.getElementById(gridId);
+    const header = document.getElementById(headerId);
+    grid.innerHTML = ''; header.innerHTML = '';
+    
     const now = new Date();
-    const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay() + 1));
+    const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay() + 1 + offset));
 
     for (let i = 0; i < 7; i++) {
         const d = new Date(startOfWeek);
         d.setDate(d.getDate() + i);
         
-        const col = document.createElement('div');
-        col.className = 'day-col';
-        col.innerHTML = `<div class="day-header">Thứ ${i+2}<br>${d.getDate()}/${d.getMonth()+1}</div>`;
+        // Header
+        const dayNames = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "Chủ Nhật"];
+        header.innerHTML += `<div class="day-box-header">${dayNames[i]}<br>(${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()})</div>`;
         
-        db.filter(t => t.day === d.getDate() && t.month === (d.getMonth()+1)).forEach(task => {
-            const box = document.createElement('div');
-            box.className = 'task-box';
-            box.style.backgroundColor = task.color;
-            box.style.top = `${(task.hour / 24) * 100}%`;
-            box.innerHTML = `<b>${task.hour}:${task.min.toString().padStart(2,'0')}</b><br>${task.name}`;
+        // Column
+        const col = document.createElement('div');
+        col.className = 'day-column';
+        
+        // Render Tasks
+        userData.tasks.filter(t => t.day === d.getDate() && t.month === (d.getMonth()+1)).forEach(task => {
+            const el = document.createElement('div');
+            el.className = 'task-card clickable';
+            el.style.backgroundColor = task.color;
+            el.style.top = `${(task.startHour / 24) * 100}%`;
+            el.style.height = `${((task.endHour - task.startHour) / 24) * 100}%`;
+            el.innerHTML = `${task.startHour}h-${task.endHour}h: ${task.name}`;
             
-            box.onclick = () => {
-                confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
-                getAIReminder(task.name, task.hour);
-            };
-
-            box.oncontextmenu = (e) => {
+            el.onclick = (e) => spawnIcons(e);
+            el.oncontextmenu = (e) => {
                 e.preventDefault();
-                if(confirm("Xóa nhé?")) {
-                    db = db.filter(t => t.id !== task.id);
-                    saveData(); renderAll();
+                if(confirm("Tui xóa công việc này nhé?")) {
+                    userData.tasks = userData.tasks.filter(t => t.id !== task.id);
+                    saveData(); renderGrids();
                 }
             };
-            col.appendChild(box);
+            col.appendChild(el);
         });
         grid.appendChild(col);
     }
 }
 
-function saveData() { localStorage.setItem(`data_${roomId}`, JSON.stringify(db)); }
-
-function initApp() {
-    renderAll();
-    setInterval(() => {
-        document.getElementById('clock').innerText = new Date().toLocaleString();
-    }, 1000);
+// 6. HIỆU ỨNG ICON BAY
+function spawnIcons(e) {
+    const icon = iconLibrary[Math.floor(Math.random() * iconLibrary.length)];
+    for(let i=0; i<5; i++) {
+        const span = document.createElement('span');
+        span.className = 'flying-icon';
+        span.innerText = icon;
+        span.style.left = e.clientX + 'px';
+        span.style.top = e.clientY + 'px';
+        span.style.fontSize = (Math.random() * 20 + 10) + 'px';
+        document.body.appendChild(span);
+        setTimeout(() => span.remove(), 1500);
+    }
 }
 
-document.getElementById('btn-add').onclick = () => {
-    const val = document.getElementById('ai-input').value;
-    if(val) processAIInput(val);
+// AI Emotion Engine
+function updateAIQuote() {
+    const quotes = [
+        `Tui thấy cậu hơi bị bận đó ${userData.name}, nhớ uống nước nha!`,
+        `Cố lên nè ${userData.name}, tui luôn ở đây cổ vũ cậu.`,
+        `Hôm nay nhìn cậu năng suất thiệt sự luôn đó ${userData.name}!`,
+        `Đừng quên mấy việc quan trọng nha ${userData.name}, tui nhắc đó.`
+    ];
+    document.getElementById('ai-bubble').innerText = quotes[Math.floor(Math.random()*quotes.length)];
+}
+
+// Helpers
+function saveData() { localStorage.setItem(`data_${roomId}`, JSON.stringify(userData)); }
+
+document.getElementById('btn-add').onclick = async () => {
+    const input = document.getElementById('ai-input').value;
+    if(!input) return;
+    const task = await aiSmartParse(input);
+    if(task) {
+        userData.tasks.push(task);
+        saveData();
+        renderGrids();
+        confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+        document.getElementById('ai-input').value = "";
+    }
 };
 
-// AI Reminder (Faked Gemini API call)
-function getAIReminder(name, hour) {
-    const msgs = [
-        `Ê bạn hiền, đừng quên ${name} lúc ${hour}h nhé, tui tin ông làm được!`,
-        `Nhắc nhẹ nè: ${name} sắp tới rồi đó, tập trung lên nha.`,
-        `Công việc ${name} đang chờ ông xử đẹp vào lúc ${hour}h đó!`
-    ];
-    document.getElementById('ai-text').innerText = msgs[Math.floor(Math.random()*msgs.length)];
-}
+// Help Modal Logic
+document.getElementById('help-icon').onclick = () => document.getElementById('help-modal').classList.add('active');
+document.querySelector('.close-btn').onclick = () => document.getElementById('help-modal').classList.remove('active');
