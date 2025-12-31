@@ -2,74 +2,70 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>MasterPlan AI - Quản lý lịch trình thông minh</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>QUẢN LÝ CÔNG VIỆC AI</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
 </head>
-<body class="horizontal-mode">
-    <section id="landing-page" class="view-section active">
-        <div class="hero">
-            <h1>QUẢN LÝ CÔNG VIỆC AI</h1>
-            <p>Tạo không gian quản lý lịch trình độc bản, riêng tư và thông minh.</p>
-            <button id="create-room-btn">Tạo không gian riêng của tôi</button>
-            <div id="url-display-area" class="hidden">
-                <p>Đây là link độc quyền của bạn. Hãy lưu lại và sử dụng:</p>
-                <div class="copy-box">
-                    <input type="text" id="generated-url" readonly>
-                    <button onclick="copyURL()">Sao chép</button>
-                </div>
-                <p class="note">⚠️ Link này là chìa khóa duy nhất, đừng làm mất nhé!</p>
-            </div>
-        </div>
-    </section>
-
-    <section id="dashboard-page" class="view-section">
-        <header class="dashboard-header">
-            <div class="ai-input-wrapper">
-                <input type="text" id="task-input" placeholder="Gõ: 'Học Marketing 14h chiều mai' hoặc 'Đi gym 18:00 05/01'...">
-                <button id="add-task-btn">Thêm công việc</button>
-            </div>
-            <div id="ai-status" class="status-bubble">AI đang chờ lệnh...</div>
-        </header>
-
-        <div class="main-layout">
-            <div class="calendar-container this-week">
-                <h2 id="this-week-title">Tuần này</h2>
-                <div class="week-grid" id="week-grid-now">
-                    </div>
-                <div id="ai-emotional-assistant" class="ai-chat-box">
-                    <span class="ai-icon">🤖</span>
-                    <p id="ai-quote">Chào buổi sáng! Chúc bạn một ngày năng suất.</p>
+<body class="landscape-force">
+    <div id="landing-page" class="page active">
+        <div class="glass-card">
+            <h1 class="gradient-text">QUẢN LÝ CÔNG VIỆC AI</h1>
+            <p>Kiến tạo không gian làm việc độc bản & riêng tư tuyệt đối.</p>
+            <button id="btn-create-link" class="main-btn">Tạo Không Gian Riêng Biệt</button>
+            <div id="result-link" class="hidden animate-fade">
+                <p>Link độc quyền của bạn (Hãy lưu lại):</p>
+                <div class="input-group">
+                    <input type="text" id="share-url" readonly>
+                    <button id="btn-copy">Sao chép</button>
                 </div>
             </div>
-
-            <div class="calendar-container next-week">
-                <h2>Tuần sau</h2>
-                <div class="summary-grid" id="week-grid-next">
-                    </div>
-            </div>
-        </div>
-
-        <footer class="dashboard-footer">
-            <button id="history-btn">📁 Lịch sử 4 tuần</button>
-            <div id="real-time-clock"></div>
-        </footer>
-    </section>
-
-    <div id="history-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-modal">&times;</span>
-            <h3>Lịch sử công việc</h3>
-            <div class="history-options">
-                <button class="hist-opt" data-week="1">Tuần trước</button>
-                <button class="hist-opt" data-week="2">2 tuần trước</button>
-                <button class="hist-opt" data-week="3">3 tuần trước</button>
-                <button class="hist-opt" data-week="4">4 tuần trước</button>
-            </div>
-            <div id="history-viewer"></div>
         </div>
     </div>
 
-    <audio id="confetti-sound" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3"></audio>
+    <div id="dashboard" class="page">
+        <div class="top-bar">
+            <div class="ai-input-zone">
+                <input type="text" id="ai-input" placeholder="Nhập: 'Học tiếng Anh 14h chiều mai' hoặc 'Gym 18h30 02/01'...">
+                <button id="btn-add">Thêm Công Việc</button>
+            </div>
+            <div id="ai-status">AI đang lắng nghe...</div>
+        </div>
+
+        <div class="app-content">
+            <section class="panel panel-main">
+                <div class="panel-header">
+                    <h2>TUẦN NÀY</h2>
+                    <div id="lunar-info"></div>
+                </div>
+                <div class="calendar-grid" id="grid-current-week">
+                    </div>
+                <div id="ai-assistant-bubble">
+                    <div class="ai-avatar">🤖</div>
+                    <div id="ai-text">Chào ông chủ! Chúc một ngày năng suất nhé.</div>
+                </div>
+            </section>
+
+            <section class="panel panel-side">
+                <div class="panel-header"><h2>TUẦN SAU</h2></div>
+                <div class="summary-list" id="grid-next-week"></div>
+            </section>
+        </div>
+
+        <div class="bottom-controls">
+            <button id="btn-history" class="small-btn">📁 Lịch sử 4 tuần</button>
+            <div id="clock">00:00:00 - 01/01/2026</div>
+        </div>
+    </div>
+
+    <div id="modal-history" class="modal">
+        <div class="modal-content glass">
+            <span class="close">&times;</span>
+            <h3>Lịch sử hoạt động (4 tuần gần nhất)</h3>
+            <div class="history-grid" id="history-content"></div>
+        </div>
+    </div>
+
     <script src="script.js"></script>
 </body>
 </html>
