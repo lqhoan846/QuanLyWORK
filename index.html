@@ -1,90 +1,60 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QUẢN LÝ CÔNG VIỆC BẰNG AI - LamQuocHoan</title>
-    <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+  <meta charset="UTF-8" />
+  <title>QUẢN LÝ CÔNG VIỆC BẰNG AI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="stylesheet" href="style.css"/>
 </head>
+
 <body>
-    <div id="app">
-        <div id="landing-page" class="page active">
-            <div class="hero-section">
-                <h1>QUẢN LÝ CÔNG VIỆC BẰNG AI</h1>
-                <p>Tạo không gian quản lý cá nhân hóa, bảo mật và thông minh.</p>
-                <button id="btn-create-space" class="btn-primary">Tạo không gian riêng</button>
-                <div id="url-display-area" class="hidden">
-                    <p>Đây là link độc quyền của bạn:</p>
-                    <div class="copy-box">
-                        <input type="text" id="exclusive-url" readonly>
-                        <button onclick="copyURL()">Sao chép</button>
-                    </div>
-                    <p class="note">Lưu ý: Hãy lưu link này để truy cập vào lần sau!</p>
-                </div>
-                <footer class="footer-name">Được tạo bởi: Lam Quoc Hoan</footer>
-            </div>
-        </div>
 
-        <div id="dashboard" class="page hidden">
-            <div class="dashboard-container">
-                <header class="ai-input-section">
-                    <div class="input-group">
-                        <input type="text" id="ai-task-input" placeholder="Hãy nhập công việc và thời gian cụ thể">
-                        <button id="btn-add-task">THÊM CÔNG VIỆC</button>
-                    </div>
-                    <div id="ai-status-bubble" class="ai-bubble hidden">
-                        <div class="ai-avatar">🤖</div>
-                        <div class="ai-content">
-                            <p id="ai-message">Chào cậu! Tui đang đợi cậu nhập việc nè...</p>
-                        </div>
-                    </div>
-                </header>
+<!-- HELP -->
+<div id="helpBtn">?</div>
 
-                <main class="main-content">
-                    <section class="calendar-section this-week">
-                        <h2>TUẦN NÀY</h2>
-                        <div class="calendar-grid" id="grid-this-week">
-                            </div>
-                    </section>
+<!-- LANDING -->
+<section id="landing">
+  <h1>QUẢN LÝ CÔNG VIỆC BẰNG AI</h1>
+  <button id="createSpace">TẠO KHÔNG GIAN RIÊNG</button>
+  <footer>Được tạo bởi: LamQuocHoan</footer>
+</section>
 
-                    <aside class="calendar-section next-week">
-                        <h2>TUẦN SAU</h2>
-                        <div class="calendar-grid-small" id="grid-next-week"></div>
-                    </aside>
-                </main>
+<!-- DASHBOARD -->
+<section id="dashboard" class="hidden">
 
-                <footer class="dashboard-footer">
-                    <div class="footer-left">
-                        <button id="btn-history" class="btn-icon">📖 LỊCH SỬ</button>
-                        <button id="btn-future" class="btn-icon">🌸 TƯƠNG LAI</button>
-                        <button id="btn-help" class="btn-icon">❓</button>
-                    </div>
-                    <div class="footer-right">
-                        <span class="creator-tag">Được tạo bởi: LamQuocHoan</span>
-                    </div>
-                </footer>
-            </div>
-        </div>
-    </div>
+<header class="top-bar">
+  <input id="taskInput" placeholder="Hãy nhập công việc và thời gian cụ thể"/>
+  <button id="addTask">THÊM CÔNG VIỆC</button>
+</header>
 
-    <div id="overlay" class="modal-overlay hidden"></div>
-    <div id="modal-welcome" class="modal hidden">
-        <div class="modal-content">
-            <h2>Xin chào bạn!</h2>
-            <p>Mình là hệ thống quản lý công việc thông minh được tạo bởi <strong>Lam Quoc Hoan</strong>. Cậu tên gì thế?</p>
-            <input type="text" id="user-name-input" placeholder="Nhập tên của cậu...">
-            <button id="btn-start" class="btn-primary">BẮT ĐẦU</button>
-        </div>
-    </div>
-    
-    <div id="modal-view" class="modal hidden">
-        <div id="modal-title-area"></div>
-        <div class="modal-grid-container" id="modal-grid"></div>
-        <button class="btn-close">Trở lại</button>
-    </div>
+<main class="calendar-wrapper">
+  <div class="week big">
+    <h2>TUẦN NÀY</h2>
+    <div id="calendarThisWeek" class="calendar"></div>
+  </div>
 
-    <script src="script.js"></script>
+  <div class="week small">
+    <h2>TUẦN SAU</h2>
+    <div id="calendarNextWeek" class="calendar"></div>
+  </div>
+</main>
+
+<section class="assistant">
+  <div id="aiMessage" class="chat"></div>
+</section>
+
+<footer class="bottom-bar">
+  <button id="historyBtn">📘 LỊCH SỬ</button>
+  <button id="futureBtn">🌸 TƯƠNG LAI</button>
+  <span>Được tạo bởi: LamQuocHoan</span>
+</footer>
+
+</section>
+
+<!-- OVERLAY + MODAL -->
+<div id="overlay" class="hidden"></div>
+<div id="modal" class="hidden"></div>
+
+<script src="app.js"></script>
 </body>
 </html>
