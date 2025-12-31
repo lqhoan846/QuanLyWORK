@@ -1,86 +1,77 @@
-/* ========================
-   PHÂN TÍCH URL
-======================== */
+// ===== TIỆN ÍCH =====
+function generateId() {
+  return (
+    Date.now().toString(36) +
+    Math.random().toString(36).substring(2, 10)
+  );
+}
+
+function qs(id) {
+  return document.getElementById(id);
+}
+
+// ===== KIỂM TRA LINK =====
 const params = new URLSearchParams(window.location.search);
-const spaceId = params.get("id");
+const workspaceId = params.get("id");
 
-/* ========================
-   ELEMENTS
-======================== */
-const landing = document.getElementById("landing");
-const workspace = document.getElementById("workspace");
-
-const btnCreate = document.getElementById("btnCreate");
-const linkContainer = document.getElementById("linkContainer");
-const linkInput = document.getElementById("linkInput");
-const btnCopy = document.getElementById("btnCopy");
-const btnOpen = document.getElementById("btnOpen");
-
-/* ========================
-   TRANG ĐẠI TRÀ
-======================== */
-if (!spaceId) {
-  btnCreate.onclick = () => {
-    const uid = crypto.randomUUID();
-
+// ===== PHẦN TẠO LINK =====
+if (!workspaceId) {
+  qs("btnCreate").onclick = () => {
+    const id = generateId();
     const link =
-      window.location.origin +
-      window.location.pathname +
+      location.origin +
+      location.pathname +
       "?id=" +
-      uid;
+      id;
 
-    linkInput.value = link;
-    btnOpen.href = link;
-
-    linkContainer.style.display = "block";
+    qs("privateLink").value = link;
+    qs("btnOpen").href = link;
+    qs("linkBox").classList.remove("hidden");
   };
 
-  btnCopy.onclick = () => {
-    linkInput.select();
-    linkInput.setSelectionRange(0, 99999);
-    navigator.clipboard.writeText(linkInput.value);
-    btnCopy.innerText = "Đã sao chép";
-    setTimeout(() => (btnCopy.innerText = "Sao chép"), 1500);
+  qs("btnCopy").onclick = () => {
+    qs("privateLink").select();
+    document.execCommand("copy");
+    alert("Đã sao chép link!");
   };
 }
 
-/* ========================
-   WORKSPACE RIÊNG
-======================== */
-if (spaceId) {
-  landing.style.display = "none";
-  workspace.style.display = "block";
+// ===== PHẦN WORKSPACE =====
+if (workspaceId) {
+  qs("homePage").classList.add("hidden");
+  qs("workspacePage").classList.remove("hidden");
+  qs("workspaceId").textContent = "ID: " + workspaceId;
 
-  const taskText = document.getElementById("taskText");
-  const addTask = document.getElementById("addTask");
-  const taskList = document.getElementById("taskList");
-
-  const STORAGE_KEY = "WORKSPACE_" + spaceId;
+  const STORAGE_KEY = "tasks_" + workspaceId;
   let tasks = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
 
   function render() {
-    taskList.innerHTML = "";
-    tasks.forEach((task, index) => {
+    const list = qs("taskList");
+    list.innerHTML = "";
+    tasks.forEach((t, i) => {
       const li = document.createElement("li");
-      li.textContent = task;
-      li.onclick = () => {
-        tasks.splice(index, 1);
-        save();
-      };
-      taskList.appendChild(li);
+      li.innerHTML = `
+        <span>${t}</span>
+        <button data-i="${i}">X</button>
+      `;
+      list.appendChild(li);
     });
   }
 
-  function save() {
+  qs("addTask").onclick = () => {
+    const text = qs("taskText").value.trim();
+    if (!text) return;
+    tasks.push(text);
+    qs("taskText").value = "";
     localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
     render();
-  }
+  };
 
-  addTask.onclick = () => {
-    if (taskText.value.trim()) {
-      tasks.push(taskText.value.trim());
-      taskText.value = "";
-      save();
+  qs("taskList").onclick = (e) => {
+    if (e.target.tagName === "BUTTON") {
+      tasks.splice(e.target.dataset.i, 1);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+      render();
     }
   };
 
