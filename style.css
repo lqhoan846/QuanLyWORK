@@ -1,0 +1,111 @@
+:root {
+    --bg: #fdfbfb;
+    --primary: #a8edea;
+    --secondary: #fed6e3;
+    --text: #2d3436;
+    --accent: #6c5ce7;
+    --warning: #ff7675;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(120deg, #fdfbfb 0%, #ebedee 100%);
+    color: var(--text);
+    margin: 0;
+    overflow-x: hidden;
+}
+
+.horizontal-mode {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Landing Page */
+.view-section { display: none; height: 100vh; align-items: center; justify-content: center; text-align: center; }
+.view-section.active { display: flex; flex-direction: column; }
+
+.hero h1 { font-size: 4rem; background: linear-gradient(to right, #6c5ce7, #a8edea); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+/* Dashboard Layout */
+.main-layout {
+    display: flex;
+    flex: 1;
+    padding: 10px;
+    gap: 15px;
+    height: calc(100vh - 150px);
+}
+
+.this-week { flex: 3; background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); border-radius: 20px; border: 1px solid white; display: flex; flex-direction: column; }
+.next-week { flex: 1; background: rgba(255, 255, 255, 0.4); border-radius: 20px; padding: 15px; }
+
+/* Grid Lịch */
+.week-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    flex: 1;
+    gap: 5px;
+    padding: 10px;
+}
+
+.day-column {
+    background: rgba(255,255,255,0.5);
+    border-radius: 10px;
+    position: relative;
+    border: 1px solid #eee;
+}
+
+.day-header {
+    text-align: center;
+    padding: 10px 0;
+    font-weight: bold;
+    border-bottom: 2px solid var(--primary);
+    font-size: 0.9rem;
+}
+
+/* Task Card */
+.task-item {
+    position: absolute;
+    left: 5px;
+    right: 5px;
+    border-radius: 8px;
+    padding: 5px;
+    font-size: 0.8rem;
+    color: white;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    cursor: pointer;
+    animation: slideIn 0.5s ease;
+}
+
+@keyframes slideIn { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+/* AI Input */
+.ai-input-wrapper {
+    width: 60%;
+    margin: 20px auto;
+    display: flex;
+    gap: 10px;
+}
+
+#task-input {
+    flex: 1;
+    padding: 15px 25px;
+    border-radius: 30px;
+    border: none;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+}
+
+#add-task-btn {
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 30px;
+    padding: 0 30px;
+    cursor: pointer;
+}
+
+/* Modal */
+.modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); }
+.modal-content { background: white; margin: 10% auto; padding: 20px; width: 80%; border-radius: 20px; }
