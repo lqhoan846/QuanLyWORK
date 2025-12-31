@@ -1,123 +1,113 @@
-document.addEventListener("DOMContentLoaded", () => {
+const qs = new URLSearchParams(location.search);
+const id = qs.get("id");
 
-  const qs = new URLSearchParams(window.location.search);
-  let spaceId = qs.get("id");
+const landing = document.getElementById("landing");
+const workspace = document.getElementById("workspace");
 
-  const landing = document.getElementById("landing");
-  const dashboard = document.getElementById("dashboard");
+if (!id) {
+  // ===== LANDING =====
+  document.getElementById("createLink").onclick = () => {
+    const uid = crypto.randomUUID();
+    const link = location.origin + location.pathname + "?id=" + uid;
+    document.getElementById("privateLink").value = link;
+    document.getElementById("linkBox").classList.remove("hidden");
+  };
 
-  const createBtn = document.getElementById("createSpace");
-  const addBtn = document.getElementById("addTask");
-  const input = document.getElementById("taskInput");
+  document.getElementById("copyLink").onclick = () => {
+    privateLink.select();
+    document.execCommand("copy");
+    alert("Đã sao chép link riêng");
+  };
+} else {
+  // ===== WORKSPACE =====
+  landing.classList.add("hidden");
+  workspace.classList.remove("hidden");
 
-  /* ===== START ===== */
-  if (!spaceId) {
-    landing.classList.remove("hidden");
+  const storeKey = "QLCV_" + id;
+  const data = JSON.parse(localStorage.getItem(storeKey) || "{}");
+
+  // LẦN ĐẦU
+  if (!data.name) {
+    document.getElementById("welcomeModal").classList.remove("hidden");
+    document.getElementById("startBtn").onclick = () => {
+      data.name = userNameInput.value || "bạn";
+      save();
+      welcomeModal.classList.add("hidden");
+      hello();
+    };
   } else {
-    initSpace(spaceId);
+    hello();
   }
 
-  createBtn.onclick = () => {
-    const id = "id-" + Date.now() + "-" + Math.random().toString(36).slice(2);
-    window.location.href = "?id=" + id;
-  };
-
-  /* ===== DATA ===== */
-  function loadData() {
-    return JSON.parse(localStorage.getItem(spaceId)) || {
-      name: null,
-      tasks: []
-    };
+  function hello() {
+    document.getElementById("helloText").innerText =
+      `Chào ${data.name}, hôm nay mình làm gì nè?`;
   }
 
-  function saveData(data) {
-    localStorage.setItem(spaceId, JSON.stringify(data));
+  function save() {
+    localStorage.setItem(storeKey, JSON.stringify(data));
   }
 
-  /* ===== INIT ===== */
-  function initSpace(id) {
-    landing.classList.add("hidden");
-    dashboard.classList.remove("hidden");
+  // LỊCH
+  function renderWeek(el, offset = 0) {
+    el.innerHTML = "";
+    const base = new Date();
+    base.setDate(base.getDate() + offset * 7);
+    const monday = new Date(base);
+    monday.setDate(base.getDate() - (base.getDay() + 6) % 7);
 
-    const data = loadData();
-    if (!data.name) askName(data);
-
-    renderWeek(0, "calendarThisWeek");
-    renderWeek(7, "calendarNextWeek");
-
-    aiSay(`Chào ${data.name || "bạn"} nha 🌱`);
-  }
-
-  /* ===== PARSER ===== */
-  function parseTask(text) {
-    const time = text.match(/(\d{1,2})h\s*-\s*(\d{1,2})h/);
-    const date = text.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-    if (!time || !date) return null;
-
-    return {
-      title: text.replace(time[0], "").replace(date[0], "").trim(),
-      start: Number(time[1]),
-      end: Number(time[2]),
-      date: `${date[3]}-${date[2]}-${date[1]}`,
-      color: randomColor()
-    };
-  }
-
-  /* ===== ADD TASK ===== */
-  addBtn.onclick = () => {
-    const parsed = parseTask(input.value);
-    if (!parsed) {
-      aiSay("Tui chưa hiểu rõ giờ giấc hay ngày tháng 😗");
-      return;
-    }
-    const data = loadData();
-    data.tasks.push(parsed);
-    saveData(data);
-
-    renderWeek(0, "calendarThisWeek");
-    aiSay("Thêm xong rồi nè ✨");
-    input.value = "";
-  };
-
-  /* ===== RENDER ===== */
-  function renderWeek(offset, targetId) {
-    const cal = document.getElementById(targetId);
-    cal.innerHTML = "";
-
-    const start = startOfWeek(offset);
+    const days = ["Thứ 2","Thứ 3","Thứ 4","Thứ 5","Thứ 6","Thứ 7","Chủ Nhật"];
 
     for (let i = 0; i < 7; i++) {
-      const d = new Date(start);
-      d.setDate(d.getDate() + i);
-      cal.appendChild(dayHeader(d));
-    }
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
 
-    for (let i = 0; i < 24 * 7; i++) {
-      cal.appendChild(document.createElement("div"));
-    }
+      const key = d.toDateString();
+      const tasks = data[key] || [];
 
-    const data = loadData();
-    data.tasks.forEach(t => {
-      const taskDate = new Date(t.date);
-      if (taskDate >= start && taskDate < new Date(start.getTime() + 7 * 86400000)) {
-        const dayIndex = (taskDate.getDay() + 6) % 7;
-        const el = document.createElement("div");
-        el.className = "task";
-        el.style.background = t.color;
-        el.style.gridColumn = dayIndex + 1;
-        el.style.gridRow = `${t.start + 2} / ${t.end + 2}`;
-        el.innerHTML = `<b>${t.start}h-${t.end}h</b><br>${t.title}`;
-        cal.appendChild(el);
-      }
-    });
+      const div = document.createElement("div");
+      div.className = "day";
+
+      div.innerHTML = `
+        <b>${days[i]}</b>
+        <div>${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}</div>
+        <div class="lunar">Âm: ${(d.getDate()+1)%30}/${(d.getMonth()+1)%12}</div>
+      `;
+
+      tasks.forEach(t => {
+        const task = document.createElement("div");
+        task.className = "task";
+        task.style.background = t.color;
+        task.innerText = `${t.start}-${t.end} ${t.title}`;
+        div.appendChild(task);
+      });
+
+      el.appendChild(div);
+    }
   }
 
-  function dayHeader(d) {
-    const div = document.createElement("div");
-    div.className = "day-header";
-    div.innerHTML = `
-      <div>Thứ ${d.getDay() === 0 ? "CN" : d.getDay() + 1}</div>
-      <div>(${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()})</div>
-      <div class="lunar">(Âm ${d.getDate()}/${d.getMonth() + 1})</div>
-    `;
-    return div;
+  renderWeek(currentWeek, 0);
+  renderWeek(nextWeek, 1);
+
+  // AI GIẢ LẬP PARSING
+  document.getElementById("addTask").onclick = () => {
+    const text = aiInput.value;
+    if (!text.match(/\d{1,2}h/)) {
+      aiMessage.innerText = `Tui chưa thấy giờ nè ${data.name} ơi 🥺`;
+      return;
+    }
+
+    const today = new Date().toDateString();
+    data[today] ||= [];
+    data[today].push({
+      title: text.slice(0, 20),
+      start: "09:00",
+      end: "10:00",
+      color: `hsl(${Math.random()*360},70%,60%)`
+    });
+
+    save();
+    renderWeek(currentWeek, 0);
+    aiMessage.innerText = `Ok nè ${data.name} 💪 tui đã thêm công việc rồi`;
+  };
+}
